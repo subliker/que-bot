@@ -1,0 +1,8 @@
+logger:
+  targets: [] # default # Targets(addresses) to which the logger sends logs
+  dir: logs # default # Directory to store logs
+  debug: false # default # Debug mode
+
+bot:
+  token: <your-telegram-bot-api-token> # required # Token is bot father telegram token for bot api
+  long_poller_timeout: 10 # default # LongPollerTimeout is time(in seconds) of response waiting

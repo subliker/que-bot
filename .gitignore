@@ -1,0 +1,6 @@
+# configs
+configs/*.yml
+!*.example.yml
+
+# logs
+logs
