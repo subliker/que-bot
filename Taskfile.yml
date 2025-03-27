@@ -24,12 +24,12 @@ tasks:
   run:
     desc: Run service
     cmds:
-      - go run cmd/dashboard/main.go {{.CLI_ARGS}}
+      - go run cmd/que/main.go {{.CLI_ARGS}}
 
   help:
     desc: Get configuration options help
     cmds:
-      - go run cmd/dashboard/main.go -help
+      - go run cmd/que/main.go -help
 
   set-example:
     desc: Set example configuration and environment for test
