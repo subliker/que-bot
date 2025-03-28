@@ -24,6 +24,8 @@ require (
 
 require (
 	github.com/go-playground/validator/v10 v10.25.0
+	github.com/go-telegram/bot v1.14.1
+	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	go.uber.org/multierr v1.10.0 // indirect
 )

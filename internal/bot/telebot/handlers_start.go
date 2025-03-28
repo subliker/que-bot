@@ -9,7 +9,10 @@ import (
 func (c *controller) handleStart() tele.HandlerFunc {
 	logger := c.logger.WithFields("handler", "start")
 	return func(ctx tele.Context) error {
-		logger := logger.WithFields("message_id", ctx.Message().ID)
+		logger := logger.WithFields(
+			"sender_id", ctx.Sender().ID,
+			"message_id", ctx.Message().ID,
+		)
 
 		// send start message
 		if err := ctx.Send("add me to group"); err != nil {
