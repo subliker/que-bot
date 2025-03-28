@@ -30,9 +30,14 @@ func NewController(logger logger.Logger, cfg Config, qd dispatcher.QueueDispatch
 	client, err := tele.NewBot(tele.Settings{
 		Token: cfg.Token,
 		Poller: &tele.LongPoller{
-			Timeout:        time.Second * time.Duration(cfg.LongPollerTimeout),
-			AllowedUpdates: []string{"inline_query"},
+			Timeout: time.Second * time.Duration(cfg.LongPollerTimeout),
+			AllowedUpdates: []string{
+				"inline_query",
+				"chosen_inline_result",
+				"callback_query",
+			},
 		},
+		OnError: c.onError,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error making telegram bot api client: %w", err)
@@ -57,4 +62,8 @@ func (c *controller) Run(ctx context.Context) {
 		cancel()
 	}()
 	<-ctx.Done()
+}
+
+func (c *controller) onError(err error, ctx tele.Context) {
+	c.logger.Error(err)
 }

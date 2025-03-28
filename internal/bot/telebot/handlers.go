@@ -8,4 +8,8 @@ import (
 func (c *controller) initHandlers() {
 	c.client.Handle("/start", c.handleStart())
 	c.client.Handle(tele.OnQuery, c.handleQuery())
+	c.client.Handle(tele.OnInlineResult, c.handleInlineResult())
+
+	c.client.Handle(&queueQueryBtnSubmit, c.handleQueueQueryBtnSubmit())
+	c.client.Handle(&queueQueryBtnNew, c.handleQueueQueryBtnNew())
 }
