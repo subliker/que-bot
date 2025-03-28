@@ -37,7 +37,8 @@ func NewController(logger logger.Logger, cfg Config, qd dispatcher.QueueDispatch
 				"callback_query",
 			},
 		},
-		OnError: c.onError,
+		ParseMode: tele.ModeMarkdown,
+		OnError:   c.onError,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error making telegram bot api client: %w", err)

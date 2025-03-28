@@ -2,6 +2,11 @@ package telegram
 
 type (
 	ChatID   int64
-	QueryID  string
 	SenderID int64
+
+	Person struct {
+		Username  string
+		FirstName string
+		LastName  string
+	}
 )

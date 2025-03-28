@@ -3,6 +3,7 @@ package telebot
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	tele "gopkg.in/telebot.v4"
 )
 
@@ -32,7 +33,8 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		// handle answer
 		mk := c.client.NewMarkup()
 		btn := queueQueryBtnNew
-		btn.Data = ctx.Query().ID
+		// generate uniq queue uuid
+		btn.Data = uuid.NewString()
 		mk.Inline(tele.Row{btn})
 		if err := ctx.Answer(&tele.QueryResponse{
 			Results: tele.Results{
@@ -45,6 +47,7 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 					},
 				},
 			},
+			CacheTime: 1,
 		}); err != nil {
 			return fmt.Errorf("error sending message: %w", err)
 		}

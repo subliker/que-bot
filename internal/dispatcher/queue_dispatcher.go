@@ -10,17 +10,23 @@ import (
 
 type QueueDispatcher interface {
 	// Add creates new queue if it doesn't exist
-	Add(queryID telegram.QueryID) error
-	// SubmitSender submits new sender with sender id in queue with query id. Returns number of sender in queue.
 	//
-	// Returns ErrQueueNotExists if queue with query id doesn't exist.
+	// Returns ErrQueueAlreadyExists if queue with queue id already exists in
+	Add(queueID queue.ID) error
+	// SubmitSender submits new sender person with sender id in queue with queue id.
+	//
+	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
 	//
 	// Returns ErrQueueSenderAlreadyExists if sender with sender id already exists in queue
-	SubmitSender(queryID telegram.QueryID, senderID telegram.SenderID) (num int, err error)
+	SubmitSender(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) error
+	// List returns ordered slice of telegram submitted persons
+	//
+	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
+	List(queueID queue.ID) ([]telegram.Person, error)
 }
 
 type queueDispatcher struct {
-	qs *expirable.LRU[telegram.QueryID, queue.Queue]
+	qs *expirable.LRU[queue.ID, queue.Queue]
 }
 
 func NewQueueDispatcher(cfg QueueConfig) QueueDispatcher {
@@ -32,33 +38,43 @@ func NewQueueDispatcher(cfg QueueConfig) QueueDispatcher {
 	return &qd
 }
 
-func (qd *queueDispatcher) Add(queryID telegram.QueryID) error {
+func (qd *queueDispatcher) Add(queueID queue.ID) error {
 	// try if already exists
-	ok := qd.qs.Contains(queryID)
+	ok := qd.qs.Contains(queueID)
 	if ok {
 		return ErrQueueAlreadyExists
 	}
 
 	// add new queue
-	qd.qs.Add(queryID, queue.New())
+	qd.qs.Add(queueID, queue.New())
 	return nil
 }
 
-func (qd *queueDispatcher) SubmitSender(queryID telegram.QueryID, senderID telegram.SenderID) (int, error) {
+func (qd *queueDispatcher) SubmitSender(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) error {
 	// get queue
-	q, ok := qd.qs.Get(queryID)
+	q, ok := qd.qs.Get(queueID)
 	if !ok {
-		return 0, ErrQueueNotExists
+		return ErrQueueNotExists
 	}
 
 	// submit sender
-	num, ok := q.Append(senderID)
+	ok = q.Append(senderID, person)
 	if !ok {
-		return 0, ErrQueueSenderAlreadyExists
+		return ErrQueueSenderAlreadyExists
 	}
-	return num, nil
+	return nil
 }
 
-func (qb *queueDispatcher) onCleanup(queryID telegram.QueryID, q queue.Queue) {
+func (qd *queueDispatcher) List(queueID queue.ID) ([]telegram.Person, error) {
+	// get queue
+	q, ok := qd.qs.Get(queueID)
+	if !ok {
+		return nil, ErrQueueNotExists
+	}
+
+	return q.List(), nil
+}
+
+func (qb *queueDispatcher) onCleanup(queueID queue.ID, q queue.Queue) {
 
 }
