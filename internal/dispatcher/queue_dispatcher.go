@@ -23,6 +23,12 @@ type QueueDispatcher interface {
 	//
 	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
 	List(queueID queue.ID) ([]telegram.Person, error)
+	// SubmitSenderAndList submits sender person and returns actual person
+	//
+	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
+	//
+	// Returns ErrQueueSenderAlreadyExists if sender with sender id already exists in queue
+	SubmitSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) ([]telegram.Person, error)
 }
 
 type queueDispatcher struct {
@@ -73,6 +79,21 @@ func (qd *queueDispatcher) List(queueID queue.ID) ([]telegram.Person, error) {
 	}
 
 	return q.List(), nil
+}
+
+func (qd *queueDispatcher) SubmitSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) ([]telegram.Person, error) {
+	// get queue
+	q, ok := qd.qs.Get(queueID)
+	if !ok {
+		return nil, ErrQueueNotExists
+	}
+
+	// append and get list with lock
+	ls, ok := q.LockedAppendAndList(senderID, person)
+	if !ok {
+		return nil, ErrQueueSenderAlreadyExists
+	}
+	return ls, nil
 }
 
 func (qb *queueDispatcher) onCleanup(queueID queue.ID, q queue.Queue) {

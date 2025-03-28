@@ -26,13 +26,13 @@ func (c *controller) handleQueueQueryBtnSubmit() tele.HandlerFunc {
 			return fmt.Errorf("empty queue query btn submit data")
 		}
 
-		// submit person
+		// submit person and get list
 		uuid, err := uuid.Parse(queueID)
 		if err != nil {
 			return fmt.Errorf("error parsing queue uuid from callback data: %w", err)
 		}
 		sender := ctx.Callback().Sender
-		err = c.queueDispatcher.SubmitSender(
+		lst, err := c.queueDispatcher.SubmitSenderAndList(
 			queue.ID(uuid),
 			telegram.SenderID(sender.ID),
 			telegram.Person{
@@ -47,16 +47,7 @@ func (c *controller) handleQueueQueryBtnSubmit() tele.HandlerFunc {
 			return nil
 		}
 		if err != nil {
-			return fmt.Errorf("error submitting sender: %w", err)
-		}
-
-		// get updated array
-		lst, err := c.queueDispatcher.List(queue.ID(uuid))
-		if errors.Is(err, dispatcher.ErrQueueNotExists) {
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error getting queue list: %w", err)
+			return fmt.Errorf("error submitting sender or getting list: %w", err)
 		}
 
 		// format answer. TODO move to message package
