@@ -139,14 +139,14 @@ func (ru_RU_callback) QueueNew() callbackqueueNew {
 }
 type ru_RU_callbackqueueNew struct{}
 func (ru_RU_callbackqueueNew) Main(queue_name string) string {
-    return fmt.Sprintf("Очередь на %s на данный момент пуста! Стань первым 😎", queue_name)
+    return fmt.Sprintf("Очередь на *%s* на данный момент пуста! Стань первым 😎", queue_name)
 }
 func (ru_RU_callback) Queue() callbackqueue {
     return ru_RU_callbackqueue{}
 }
 type ru_RU_callbackqueue struct{}
 func (ru_RU_callbackqueue) Head(queue_name string) string {
-    return fmt.Sprintf("На данный момент очередь на %s выглядит следующим образом 📒:", queue_name)
+    return fmt.Sprintf("На данный момент очередь на *%s* выглядит следующим образом 📒:", queue_name)
 }
 func (ru_RU_callbackqueue) Member(num int, first_name string, last_name string, user_name string) string {
     return fmt.Sprintf("%d. [%s %s](https://t.me/%s)", num, first_name, last_name, user_name)
