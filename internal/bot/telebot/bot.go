@@ -20,7 +20,9 @@ type controller struct {
 }
 
 // NewController creates new bot controller instance
-func NewController(logger logger.Logger, cfg Config, qd dispatcher.QueueDispatcher) (bot.Controller, error) {
+func NewController(logger logger.Logger,
+	cfg Config,
+	qd dispatcher.QueueDispatcher) (bot.Controller, error) {
 	var c controller
 
 	// set logger
@@ -32,6 +34,7 @@ func NewController(logger logger.Logger, cfg Config, qd dispatcher.QueueDispatch
 		Poller: &tele.LongPoller{
 			Timeout: time.Second * time.Duration(cfg.LongPollerTimeout),
 			AllowedUpdates: []string{
+				"message",
 				"inline_query",
 				"chosen_inline_result",
 				"callback_query",

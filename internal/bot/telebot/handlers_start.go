@@ -14,8 +14,15 @@ func (c *controller) handleStart() tele.HandlerFunc {
 			"message_id", ctx.Message().ID,
 		)
 
+		bundle := c.langBundle(ctx.Sender().LanguageCode)
 		// send start message
-		if err := ctx.Send("add me to group"); err != nil {
+		if err := ctx.Send(
+			bundle.StartMessage().Head(ctx.Sender().FirstName)+
+				bundle.StartMessage().Main(c.client.Me.Username),
+			&tele.SendOptions{
+				ParseMode: tele.ModeHTML,
+			},
+		); err != nil {
 			errMsg := fmt.Errorf("error sending message: %w", err)
 			logger.Error(errMsg)
 			return errMsg

@@ -9,9 +9,11 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
+	github.com/MrNemo64/go-n-i18n v0.0.3 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
@@ -29,4 +31,9 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	go.uber.org/multierr v1.10.0 // indirect
+)
+
+tool (
+	github.com/MrNemo64/go-n-i18n
+	github.com/MrNemo64/go-n-i18n/cmd/i18n
 )

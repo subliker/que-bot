@@ -50,15 +50,18 @@ func (c *controller) handleQueueQueryBtnSubmit() tele.HandlerFunc {
 			return fmt.Errorf("error submitting sender or getting list: %w", err)
 		}
 
-		// format answer. TODO move to message package
-		txt := "Очередь:\n"
+		callbackBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Callback()
+
+		// format answer
+		txt := callbackBundle.Queue().Head() + "\n"
 		for i, p := range lst {
-			txt += fmt.Sprintf("%d. [%s %s](https://t.me/%s)\n", i+1, p.FirstName, p.LastName, p.Username)
+			txt += callbackBundle.Queue().Member(i+1, p.FirstName, p.LastName, p.Username)
 		}
 
 		// edit message
 		mk := c.client.NewMarkup()
 		btn := queueQueryBtnSubmit
+		btn.Text = callbackBundle.Btns().Submit(len(lst) + 1)
 		// set queue uuid
 		btn.Data = ctx.Callback().Data
 		mk.Inline(tele.Row{btn})
@@ -97,12 +100,15 @@ func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
 			return fmt.Errorf("error adding queue in dispatcher: %w", err)
 		}
 
+		callbackBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Callback()
+
 		// send message
 		mk := c.client.NewMarkup()
 		btn := queueQueryBtnSubmit
+		btn.Text = callbackBundle.Btns().SubmitFirst()
 		btn.Data = ctx.Callback().Data
 		mk.Inline(tele.Row{btn})
-		ctx.Edit("push commit to take a place", mk)
+		ctx.Edit(callbackBundle.QueueNew().Main(), mk)
 		return nil
 	}
 }

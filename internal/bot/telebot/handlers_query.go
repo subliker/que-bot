@@ -14,14 +14,17 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		// 	"sender_id", ctx.Sender().ID,
 		// )
 
+		queryBundle := c.langBundle(ctx.Query().Sender.LanguageCode).Query()
+		queueName := inputText.ReplaceAllString(ctx.Query().Text, "")
+
 		// send error if not in group
 		if ctx.Query().ChatType != "group" {
 			if err := ctx.Answer(&tele.QueryResponse{
 				Results: tele.Results{
 					&tele.ArticleResult{
-						Title:       fmt.Sprintf("Queue %s", ctx.Query().Text),
-						Description: "Create group query",
-						Text:        "Queue can be created only in groups",
+						Title:       queryBundle.Main().Title(queueName),
+						Description: queryBundle.Main().Description(),
+						Text:        queryBundle.Main().TextNoGroup(),
 					},
 				},
 			}); err != nil {
@@ -33,15 +36,16 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		// handle answer
 		mk := c.client.NewMarkup()
 		btn := queueQueryBtnNew
+		btn.Text = queryBundle.Btns().New()
 		// generate uniq queue uuid
 		btn.Data = uuid.NewString()
 		mk.Inline(tele.Row{btn})
 		if err := ctx.Answer(&tele.QueryResponse{
 			Results: tele.Results{
 				&tele.ArticleResult{
-					Title:       fmt.Sprintf("Queue %s", ctx.Query().Text),
-					Description: "Create group query",
-					Text:        "push button below to create queue",
+					Title:       queryBundle.Main().Title(queueName),
+					Description: queryBundle.Main().Description(),
+					Text:        queryBundle.Main().Text(queueName),
 					ResultBase: tele.ResultBase{
 						ReplyMarkup: mk,
 					},
