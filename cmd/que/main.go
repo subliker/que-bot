@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	"net/http"
 
 	"github.com/subliker/que-bot/internal/app"
 	"github.com/subliker/que-bot/internal/bot/telebot"
@@ -30,6 +32,14 @@ func main() {
 	if err != nil {
 		logger.Fatalf("error making bot controller: %s", err)
 	}
+
+	go func() {
+		sm := &http.ServeMux{}
+		sm.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, "it works!")
+		}))
+		http.ListenAndServe(":8080", sm)
+	}()
 
 	// creating app
 	a := app.New(logger, bc)
