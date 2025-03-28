@@ -2,6 +2,8 @@ package telebot
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/google/uuid"
 	tele "gopkg.in/telebot.v4"
@@ -18,7 +20,9 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		queueName := inputText.ReplaceAllString(ctx.Query().Text, "")
 
 		// send error if not in group
-		if ctx.Query().ChatType != "group" {
+		if !slices.Contains([]string{
+			"group", "supergroup", "channel",
+		}, ctx.Query().ChatType) {
 			if err := ctx.Answer(&tele.QueryResponse{
 				Results: tele.Results{
 					&tele.ArticleResult{
@@ -38,7 +42,7 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		btn := queueQueryBtnNew
 		btn.Text = queryBundle.Btns().New()
 		// generate uniq queue uuid
-		btn.Data = uuid.NewString()
+		btn.Data = strings.Join([]string{uuid.NewString(), queueName}, "|")
 		mk.Inline(tele.Row{btn})
 		if err := ctx.Answer(&tele.QueryResponse{
 			Results: tele.Results{

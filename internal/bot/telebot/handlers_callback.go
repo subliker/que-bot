@@ -3,6 +3,7 @@ package telebot
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/subliker/que-bot/internal/dispatcher"
@@ -20,11 +21,16 @@ func (c *controller) handleQueueQueryBtnSubmit() tele.HandlerFunc {
 	return func(ctx tele.Context) error {
 		defer ctx.Respond()
 
-		// getting query id
-		queueID := ctx.Callback().Data
+		// getting queue data
+		data := strings.Split(ctx.Callback().Data, "|")
+		if len(data) != 2 {
+			return fmt.Errorf("callback length data arguments error")
+		}
+		queueID := data[0]
 		if queueID == "" {
 			return fmt.Errorf("empty queue query btn submit data")
 		}
+		queueName := data[1]
 
 		// submit person and get list
 		uuid, err := uuid.Parse(queueID)
@@ -53,9 +59,9 @@ func (c *controller) handleQueueQueryBtnSubmit() tele.HandlerFunc {
 		callbackBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Callback()
 
 		// format answer
-		txt := callbackBundle.Queue().Head() + "\n"
+		txt := callbackBundle.Queue().Head(queueName) + "\n"
 		for i, p := range lst {
-			txt += callbackBundle.Queue().Member(i+1, p.FirstName, p.LastName, p.Username)
+			txt += callbackBundle.Queue().Member(i+1, p.FirstName, p.LastName, p.Username) + "\n"
 		}
 
 		// edit message
@@ -87,11 +93,18 @@ func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
 	return func(ctx tele.Context) error {
 		defer ctx.Respond()
 
-		// try to add queue
-		uuid, err := uuid.Parse(ctx.Callback().Data)
+		// get queue data
+		data := strings.Split(ctx.Callback().Data, "|")
+		if len(data) != 2 {
+			return fmt.Errorf("callback length data arguments error")
+		}
+		uuid, err := uuid.Parse(data[0])
 		if err != nil {
 			return fmt.Errorf("error parsing queue uuid from callback data: %w", err)
 		}
+		queueName := data[1]
+
+		// try to add queue
 		err = c.queueDispatcher.Add(queue.ID(uuid))
 		if errors.Is(err, dispatcher.ErrQueueAlreadyExists) {
 			return fmt.Errorf("queue for query id already exists")
@@ -108,7 +121,7 @@ func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
 		btn.Text = callbackBundle.Btns().SubmitFirst()
 		btn.Data = ctx.Callback().Data
 		mk.Inline(tele.Row{btn})
-		ctx.Edit(callbackBundle.QueueNew().Main(), mk)
+		ctx.Edit(callbackBundle.QueueNew().Main(queueName), mk)
 		return nil
 	}
 }
