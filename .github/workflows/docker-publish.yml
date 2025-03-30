@@ -39,7 +39,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${GITHUB_REF#refs/tags/v}
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ GITHUB_REF#refs/tags/v }}
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
           labels: |
             org.opencontainers.image.source=${{ github.repository_url }}
