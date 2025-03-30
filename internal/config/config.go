@@ -7,14 +7,16 @@ import (
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/subliker/que-bot/internal/bot/telebot"
+	"github.com/subliker/que-bot/internal/dispatcher"
 	"github.com/subliker/que-bot/internal/logger/zap"
 	"github.com/subliker/que-bot/internal/validation"
 )
 
 // Config is struct that contain app options
 type Config struct {
-	Logger zap.Config     `yaml:"logger" env-prefix:"QUE_LOGGER_"`
-	Bot    telebot.Config `yaml:"bot" env-required:"true" env-prefix:"QUE_BOT_"`
+	Logger     zap.Config             `yaml:"logger" env-prefix:"QUE_LOGGER_"`
+	Bot        telebot.Config         `yaml:"bot" env-required:"true" env-prefix:"QUE_BOT_"`
+	Dispatcher dispatcher.QueueConfig `yaml:"queue_dispatcher" env-required:"true" env-prefix:"QUE_QUEUE_DISPATCHER"`
 }
 
 var _filePath = flag.String("config", "configs/config.yml", "config file path")

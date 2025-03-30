@@ -7,6 +7,7 @@ import (
 	"github.com/subliker/que-bot/internal/app"
 	"github.com/subliker/que-bot/internal/bot/telebot"
 	"github.com/subliker/que-bot/internal/config"
+	"github.com/subliker/que-bot/internal/dispatcher"
 	"github.com/subliker/que-bot/internal/logger/zap"
 )
 
@@ -21,8 +22,11 @@ func main() {
 	// update global logger
 	zap.Logger = logger
 
+	// making queue dispatcher
+	qd := dispatcher.NewQueueDispatcher(cfg.Dispatcher)
+
 	// making bot controller
-	bc, err := telebot.NewController(logger, cfg.Bot)
+	bc, err := telebot.NewController(logger, cfg.Bot, qd)
 	if err != nil {
 		logger.Fatalf("error making bot controller: %s", err)
 	}
