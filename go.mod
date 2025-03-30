@@ -34,6 +34,5 @@ require (
 )
 
 tool (
-	github.com/MrNemo64/go-n-i18n
 	github.com/MrNemo64/go-n-i18n/cmd/i18n
 )

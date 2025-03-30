@@ -1,5 +1,6 @@
 logs/
 configs/
+static/
 .gitignore
 README.md
 Taskfile.yml
