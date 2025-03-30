@@ -18,13 +18,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Extract Git tag
-      #   id: get-tag
-      #   run: |
-      #     TAG_NAME="${GITHUB_REF#refs/tags/v}"
-      #     echo "trimmed_tag=${TAG_NAME}" >> $GITHUB_OUTPUT
-      #     echo "Original tag: ${GITHUB_REF#refs/tags/}"
-      #     echo "Trimmed tag: ${TAG_NAME}"
+      - name: Extract Git tag
+        id: get-tag
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/v}"
+          echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+          echo "Using tag: ${TAG_NAME}"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -39,7 +38,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ GITHUB_REF#refs/tags/v }}
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ steps.get-tag.outputs.* }}
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
           labels: |
             org.opencontainers.image.source=${{ github.repository_url }}
