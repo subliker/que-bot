@@ -3,19 +3,28 @@ package telebot
 import (
 	"fmt"
 	"slices"
+	"strings"
+	"unicode/utf8"
 
 	tele "gopkg.in/telebot.v4"
 )
 
 func (c *controller) handleQuery() tele.HandlerFunc {
-	// logger := c.logger.WithFields("handler", "handler")
 	return func(ctx tele.Context) error {
-		// logger := logger.WithFields(
-		// 	"sender_id", ctx.Sender().ID,
-		// )
+		ctx.Set("handler_type", "query")
+		ctx.Set("handler", "queue_query")
 
 		queryBundle := c.langBundle(ctx.Query().Sender.LanguageCode).Query()
-		queueName := inputText.ReplaceAllString(ctx.Query().Text, "")
+
+		// format queue name from query
+		queueName := strings.TrimSpace(ctx.Query().Text)
+		queueName = inputText.ReplaceAllString(queueName, "")
+		if len(queueName) > 45 {
+			queueName = queueName[:45]
+			if !utf8.ValidString(queueName) {
+				queueName = queueName[:44]
+			}
+		}
 
 		// send error if not in group
 		if !slices.Contains([]string{

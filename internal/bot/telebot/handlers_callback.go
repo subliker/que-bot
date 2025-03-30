@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/subliker/que-bot/internal/dispatcher"
 	"github.com/subliker/que-bot/internal/dispatcher/queue"
 	"github.com/subliker/que-bot/internal/domain/telegram"
@@ -20,13 +19,15 @@ var queueQueryBtnNew = tele.Btn{
 func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
 	return func(ctx tele.Context) error {
 		defer ctx.Respond()
+		ctx.Set("handler_type", "callback")
+		ctx.Set("handler", "queue_query_btn_new")
 
 		// get queue data
 		queueName := ctx.Callback().Data
 
 		// try to add queue
-		uuid := uuid.New()
-		err := c.queueDispatcher.Add(queue.ID(uuid))
+		queueID := queue.GenID(queueName)
+		err := c.queueDispatcher.Add(queueID)
 		if errors.Is(err, dispatcher.ErrQueueAlreadyExists) {
 			return fmt.Errorf("queue for query id already exists")
 		}
@@ -40,7 +41,7 @@ func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
 		mk := c.client.NewMarkup()
 		btn := queueQueryBtnSubmit
 		btn.Text = callbackBundle.Btns().SubmitFirst()
-		btn.Data = strings.Join([]string{uuid.String(), queueName}, "|")
+		btn.Data = strings.Join([]string{string(queueID), queueName}, "|")
 		mk.Inline(tele.Row{btn})
 		ctx.Edit(callbackBundle.QueueNew().Main(queueName), mk)
 		return nil
@@ -55,26 +56,20 @@ var queueQueryBtnSubmit = tele.Btn{
 func (c *controller) handleQueueQueryBtnSubmit() tele.HandlerFunc {
 	return func(ctx tele.Context) error {
 		defer ctx.Respond()
+		ctx.Set("handler_type", "callback")
+		ctx.Set("handler", "queue_query_btn_submit")
 
 		// getting queue data
 		data := strings.Split(ctx.Callback().Data, "|")
 		if len(data) != 2 {
 			return fmt.Errorf("callback length data arguments error")
 		}
-		queueID := data[0]
-		if queueID == "" {
-			return fmt.Errorf("empty queue query btn submit data")
-		}
-		queueName := data[1]
+		queueID, queueName := queue.ID(data[0]), data[1]
 
 		// submit person and get list
-		uuid, err := uuid.Parse(queueID)
-		if err != nil {
-			return fmt.Errorf("error parsing queue uuid from callback data: %w", err)
-		}
 		sender := ctx.Callback().Sender
 		lst, err := c.queueDispatcher.SubmitSenderAndList(
-			queue.ID(uuid),
+			queueID,
 			telegram.SenderID(sender.ID),
 			telegram.Person{
 				Username:  sender.Username,

@@ -3,11 +3,8 @@ package queue
 import (
 	"sync"
 
-	"github.com/google/uuid"
 	"github.com/subliker/que-bot/internal/domain/telegram"
 )
-
-type ID uuid.UUID
 
 type Queue struct {
 	ms  map[telegram.SenderID]struct{}
