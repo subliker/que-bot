@@ -3,9 +3,7 @@ package telebot
 import (
 	"fmt"
 	"slices"
-	"strings"
 
-	"github.com/google/uuid"
 	tele "gopkg.in/telebot.v4"
 )
 
@@ -42,7 +40,7 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		btn := queueQueryBtnNew
 		btn.Text = queryBundle.Btns().New()
 		// generate uniq queue uuid
-		btn.Data = strings.Join([]string{uuid.NewString(), queueName}, "|")
+		btn.Data = queueName
 		mk.Inline(tele.Row{btn})
 		if err := ctx.Answer(&tele.QueryResponse{
 			Results: tele.Results{

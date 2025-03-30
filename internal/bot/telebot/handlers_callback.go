@@ -12,6 +12,41 @@ import (
 	tele "gopkg.in/telebot.v4"
 )
 
+var queueQueryBtnNew = tele.Btn{
+	Text:   "new",
+	Unique: "new-queue",
+}
+
+func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
+	return func(ctx tele.Context) error {
+		defer ctx.Respond()
+
+		// get queue data
+		queueName := ctx.Callback().Data
+
+		// try to add queue
+		uuid := uuid.New()
+		err := c.queueDispatcher.Add(queue.ID(uuid))
+		if errors.Is(err, dispatcher.ErrQueueAlreadyExists) {
+			return fmt.Errorf("queue for query id already exists")
+		}
+		if err != nil {
+			return fmt.Errorf("error adding queue in dispatcher: %w", err)
+		}
+
+		callbackBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Callback()
+
+		// send message
+		mk := c.client.NewMarkup()
+		btn := queueQueryBtnSubmit
+		btn.Text = callbackBundle.Btns().SubmitFirst()
+		btn.Data = strings.Join([]string{uuid.String(), queueName}, "|")
+		mk.Inline(tele.Row{btn})
+		ctx.Edit(callbackBundle.QueueNew().Main(queueName), mk)
+		return nil
+	}
+}
+
 var queueQueryBtnSubmit = tele.Btn{
 	Text:   "submit",
 	Unique: "submit-queue",
@@ -80,48 +115,6 @@ func (c *controller) handleQueueQueryBtnSubmit() tele.HandlerFunc {
 		// if err := ctx.Send(fmt.Sprintf("%d. @%s", num, ctx.Callback().Sender.Username)); err != nil {
 		// 	return fmt.Errorf("error sending message: %w", err)
 		// }
-		return nil
-	}
-}
-
-var queueQueryBtnNew = tele.Btn{
-	Text:   "new",
-	Unique: "new-queue",
-}
-
-func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
-	return func(ctx tele.Context) error {
-		defer ctx.Respond()
-
-		// get queue data
-		data := strings.Split(ctx.Callback().Data, "|")
-		if len(data) != 2 {
-			return fmt.Errorf("callback length data arguments error")
-		}
-		uuid, err := uuid.Parse(data[0])
-		if err != nil {
-			return fmt.Errorf("error parsing queue uuid from callback data: %w", err)
-		}
-		queueName := data[1]
-
-		// try to add queue
-		err = c.queueDispatcher.Add(queue.ID(uuid))
-		if errors.Is(err, dispatcher.ErrQueueAlreadyExists) {
-			return fmt.Errorf("queue for query id already exists")
-		}
-		if err != nil {
-			return fmt.Errorf("error adding queue in dispatcher: %w", err)
-		}
-
-		callbackBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Callback()
-
-		// send message
-		mk := c.client.NewMarkup()
-		btn := queueQueryBtnSubmit
-		btn.Text = callbackBundle.Btns().SubmitFirst()
-		btn.Data = ctx.Callback().Data
-		mk.Inline(tele.Row{btn})
-		ctx.Edit(callbackBundle.QueueNew().Main(queueName), mk)
 		return nil
 	}
 }
