@@ -78,6 +78,7 @@ type errors interface{
     Tail() string
     Internal() string
     SubmitAgain() string
+    QueueIdCollision() string
 }
 
 type ru_RU_Messages struct{}
@@ -220,6 +221,9 @@ func (ru_RU_errors) Internal() string {
 }
 func (ru_RU_errors) SubmitAgain() string {
     return "Неа, второй раз не пройдет 🛡️"
+}
+func (ru_RU_errors) QueueIdCollision() string {
+    return "С шансом 0,39% произошла коллизия id очереди, попробуй создать снова 🤪"
 }
 
 

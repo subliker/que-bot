@@ -34,9 +34,13 @@ func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
 		queueID := queue.GenID(queueName)
 		err := c.queueDispatcher.Add(queueID)
 		if errors.Is(err, dispatcher.ErrQueueAlreadyExists) {
+			errorBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Errors()
+			ctx.RespondAlert(errorBundle.QueueIdCollision())
 			return fmt.Errorf("queue for query id already exists")
 		}
 		if err != nil {
+			errorBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Errors()
+			ctx.RespondAlert(errorBundle.Internal())
 			return fmt.Errorf("error adding queue in dispatcher: %w", err)
 		}
 
