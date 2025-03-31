@@ -48,6 +48,9 @@ func NewController(logger logger.Logger,
 	}
 	c.client = client
 
+	// set middlewares
+	c.client.Use(c.middlewareRecover)
+
 	// set queue dispatcher
 	c.queueDispatcher = qd
 
