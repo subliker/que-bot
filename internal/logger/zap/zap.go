@@ -28,10 +28,13 @@ func NewLogger(cfg Config, serviceName string) logger.Logger {
 
 	// making encoder config
 	var zcfg zapcore.EncoderConfig
+	var level zapcore.Level
 	if cfg.Debug {
 		zcfg = zap.NewDevelopmentEncoderConfig()
+		level = zapcore.DebugLevel
 	} else {
 		zcfg = zap.NewProductionEncoderConfig()
+		level = zapcore.InfoLevel
 	}
 	// time layout 2006-01-02T15:04:05.000Z0700
 	zcfg.EncodeTime = zapcore.ISO8601TimeEncoder
@@ -45,11 +48,11 @@ func NewLogger(cfg Config, serviceName string) logger.Logger {
 
 	// cores array
 	cores := []zapcore.Core{
-		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapcore.DebugLevel),
+		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), level),
 	}
 
 	if cfg.Dir != "" {
-		cores = append(cores, zapcore.NewCore(fileEncoder, zapcore.AddSync(logFile), zapcore.DebugLevel))
+		cores = append(cores, zapcore.NewCore(fileEncoder, zapcore.AddSync(logFile), level))
 	}
 
 	// walk for tcp targets
@@ -58,13 +61,21 @@ func NewLogger(cfg Config, serviceName string) logger.Logger {
 		if err != nil {
 			log.Fatalf("error connecting to target(%s): %s", target, err)
 		}
-		cores = append(cores, zapcore.NewCore(fileEncoder, zapcore.AddSync(conn), zapcore.DebugLevel))
+		cores = append(cores, zapcore.NewCore(fileEncoder, zapcore.AddSync(conn), level))
 	}
 
 	core := zapcore.NewTee(cores...)
 
 	// make new sugared logger
+	// sugaredLogger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1)).Sugar()
 	sugaredLogger := zap.New(core).Sugar()
+	if cfg.Debug {
+		sugaredLogger = sugaredLogger.WithOptions(
+			zap.AddCaller(),
+			zap.AddCallerSkip(1),
+			zap.AddStacktrace(zap.ErrorLevel),
+		)
+	}
 	sugaredLogger = sugaredLogger.Named(serviceName)
 	if Logger != nil {
 		sugaredLogger.Infof("logger initialized with targets: %s", cfg.Targets)
