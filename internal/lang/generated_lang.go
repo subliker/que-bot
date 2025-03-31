@@ -36,6 +36,7 @@ type Messages interface{
     StartMessage() startMessage
     Query() query
     Callback() callback
+    Errors() errors
 }
 type startMessage interface{
     Head(user_name string) string
@@ -69,6 +70,10 @@ type callbackqueue interface{
 type callbackbtns interface{
     SubmitFirst() string
     Submit(num int) string
+}
+type errors interface{
+    ButtonDataLength() string
+    Tail() string
 }
 
 type ru_RU_Messages struct{}
@@ -184,6 +189,20 @@ func (ru_RU_callbackbtns) Submit(num int) string {
     } else {
         return fmt.Sprintf("%d", num)
     }
+}
+func (ru_RU_Messages) Errors() errors {
+    return ru_RU_errors{}
+}
+type ru_RU_errors struct{}
+func (ru_RU_errors) ButtonDataLength() string {
+    return "Автор напортачил с байтами..." + "\n" +
+        "Сделай название очереди немного короче, от этого миру станет лучше 😉"
+}
+func (ru_RU_errors) Tail() string {
+    return "" + "\n" +
+        "" + "\n" +
+        "_Прошу связаться с автором бота, чтобы он все скоренько починил 🔨⚙️_" + "\n" +
+        "_🎵 сall me maybe 🎵_"
 }
 
 
