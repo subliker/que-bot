@@ -50,8 +50,7 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		mk := c.client.NewMarkup()
 		btn := queueQueryBtnNew
 		btn.Text = queryBundle.Btns().New()
-		// generate uniq queue uuid
-		btn.Data = queueName
+		btn = queueQueryBtnNewData(btn, queueName)
 		mk.Inline(tele.Row{btn})
 		if err := ctx.Answer(&tele.QueryResponse{
 			Results: tele.Results{

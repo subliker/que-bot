@@ -16,6 +16,11 @@ var queueQueryBtnNew = tele.Btn{
 	Unique: "new",
 }
 
+func queueQueryBtnNewData(btn tele.Btn, queueName string) tele.Btn {
+	btn.Data = queueName
+	return btn
+}
+
 func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
 	return func(ctx tele.Context) error {
 		defer ctx.Respond()
@@ -60,6 +65,11 @@ var queueQueryBtnSubmit = tele.Btn{
 	Unique: "submit",
 }
 
+func queueQueryBtnSubmitData(btn tele.Btn, queueID, queueName string) tele.Btn {
+	btn.Data = strings.Join([]string{string(queueID), queueName}, "|")
+	return btn
+}
+
 var queueQueryBtnSubmitLength = len(strings.Join([]string{
 	queueQueryBtnSubmit.Unique, string(queue.GenID("")),
 }, "|"))
@@ -77,6 +87,8 @@ func (c *controller) handleQueueQueryBtnSubmit() tele.HandlerFunc {
 		}
 		queueID, queueName := queue.ID(data[0]), data[1]
 
+		callbackBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Callback()
+
 		// submit person and get list
 		sender := ctx.Callback().Sender
 		lst, err := c.queueDispatcher.SubmitSenderAndList(
@@ -88,16 +100,26 @@ func (c *controller) handleQueueQueryBtnSubmit() tele.HandlerFunc {
 				LastName:  sender.LastName,
 			})
 		if errors.Is(err, dispatcher.ErrQueueSenderAlreadyExists) {
+			errorBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Errors()
+			ctx.RespondText(errorBundle.SubmitAgain())
 			return nil
 		}
 		if errors.Is(err, dispatcher.ErrQueueNotExists) {
+			errorBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Errors()
+			// make recreate button
+			mk := c.client.NewMarkup()
+			btn := queueQueryBtnSubmit
+			btn.Text = callbackBundle.Btns().Relive()
+			btn = queueQueryBtnSubmitData(btn, string(queueID), queueName)
+			mk.Inline(tele.Row{btn})
+			ctx.RespondAlert(errorBundle.QueueNotFound())
 			return nil
 		}
 		if err != nil {
+			errorBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Errors()
+			ctx.RespondAlert(errorBundle.Internal())
 			return fmt.Errorf("error submitting sender or getting list: %w", err)
 		}
-
-		callbackBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Callback()
 
 		// format answer
 		txt := callbackBundle.Queue().Head(queueName) + "\n"
@@ -109,18 +131,13 @@ func (c *controller) handleQueueQueryBtnSubmit() tele.HandlerFunc {
 		mk := c.client.NewMarkup()
 		btn := queueQueryBtnSubmit
 		btn.Text = callbackBundle.Btns().Submit(len(lst) + 1)
-		// set queue uuid
-		btn.Data = ctx.Callback().Data
+		btn = queueQueryBtnSubmitData(btn, string(queueID), queueName)
 		mk.Inline(tele.Row{btn})
 		ctx.Edit(txt, &tele.SendOptions{
 			ReplyMarkup:           mk,
 			DisableWebPagePreview: true,
 			ParseMode:             tele.ModeMarkdown,
 		})
-
-		// if err := ctx.Send(fmt.Sprintf("%d. @%s", num, ctx.Callback().Sender.Username)); err != nil {
-		// 	return fmt.Errorf("error sending message: %w", err)
-		// }
 		return nil
 	}
 }
