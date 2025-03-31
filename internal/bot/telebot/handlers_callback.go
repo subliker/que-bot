@@ -43,7 +43,16 @@ func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
 		btn.Text = callbackBundle.Btns().SubmitFirst()
 		btn.Data = strings.Join([]string{string(queueID), queueName}, "|")
 		mk.Inline(tele.Row{btn})
-		ctx.Edit(callbackBundle.QueueNew().Main(queueName), mk)
+		if err := ctx.Edit(callbackBundle.QueueNew().Main(queueName), mk); err != nil {
+			if !strings.Contains(err.Error(), "True") {
+				if strings.Contains(err.Error(), "BUTTON_DATA_INVALID") {
+					errorsBundle := c.langBundle(ctx.Callback().Sender.LanguageCode).Errors()
+					ctx.Edit(errorsBundle.ButtonDataLength() +
+						errorsBundle.Tail())
+				}
+				return err
+			}
+		}
 		return nil
 	}
 }
