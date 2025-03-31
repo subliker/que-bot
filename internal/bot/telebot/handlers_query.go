@@ -17,12 +17,13 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		queryBundle := c.langBundle(ctx.Query().Sender.LanguageCode).Query()
 
 		// format queue name from query
-		queueName := strings.TrimSpace(ctx.Query().Text)
-		queueName = inputText.ReplaceAllString(queueName, "")
-		if len(queueName) > 45 {
-			queueName = queueName[:45]
+		queueName := inputText.ReplaceAllString(ctx.Query().Text, "")
+		queueName = strings.TrimSpace(queueName)
+		if len(queueName) > 64-queueQueryBtnSubmitLength {
+			queueName = queueName[:64-queueQueryBtnSubmitLength]
 			if !utf8.ValidString(queueName) {
-				queueName = queueName[:44]
+				queueNameRunes := []rune(queueName)
+				queueName = string(queueNameRunes[:len(queueNameRunes)-1])
 			}
 		}
 
