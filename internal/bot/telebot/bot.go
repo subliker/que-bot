@@ -48,6 +48,9 @@ func NewController(logger logger.Logger,
 	}
 	c.client = client
 
+	// set middlewares
+	c.client.Use(c.middlewareRecover)
+
 	// set queue dispatcher
 	c.queueDispatcher = qd
 
@@ -69,5 +72,11 @@ func (c *controller) Run(ctx context.Context) {
 }
 
 func (c *controller) onError(err error, ctx tele.Context) {
-	c.logger.Error(err)
+	logger := c.logger
+	if ctx.Get("handler") != nil && ctx.Get("handler_type") != nil {
+		handler := ctx.Get("handler")
+		handlerType := ctx.Get("handler_type")
+		logger = logger.WithFields("handler", handler, "handler_type", handlerType)
+	}
+	logger.Error(err)
 }

@@ -36,6 +36,7 @@ type Messages interface{
     StartMessage() startMessage
     Query() query
     Callback() callback
+    Errors() errors
 }
 type startMessage interface{
     Head(user_name string) string
@@ -69,6 +70,15 @@ type callbackqueue interface{
 type callbackbtns interface{
     SubmitFirst() string
     Submit(num int) string
+    Relive() string
+}
+type errors interface{
+    ButtonDataLength() string
+    QueueNotFound() string
+    Tail() string
+    Internal() string
+    SubmitAgain() string
+    QueueIdCollision() string
 }
 
 type ru_RU_Messages struct{}
@@ -184,6 +194,36 @@ func (ru_RU_callbackbtns) Submit(num int) string {
     } else {
         return fmt.Sprintf("%d", num)
     }
+}
+func (ru_RU_callbackbtns) Relive() string {
+    return "Возродить очередь! ⛪"
+}
+func (ru_RU_Messages) Errors() errors {
+    return ru_RU_errors{}
+}
+type ru_RU_errors struct{}
+func (ru_RU_errors) ButtonDataLength() string {
+    return "Автор напортачил с байтами..." + "\n" +
+        "Сделай название очереди немного короче, от этого миру станет лучше 😉"
+}
+func (ru_RU_errors) QueueNotFound() string {
+    return "Кажется, что очередь уже потеряла связь с этим миром 🥲" + "\n" +
+        "Не впадайте в отчаянье и создайте новую 🧟"
+}
+func (ru_RU_errors) Tail() string {
+    return "" + "\n" +
+        "" + "\n" +
+        "_Прошу связаться с автором бота, чтобы он все скоренько починил 🔨⚙️_" + "\n" +
+        "_🎵 сall me maybe 🎵_"
+}
+func (ru_RU_errors) Internal() string {
+    return "Возникла внутренняя ошибка, сохраняйте спокойствие 😣"
+}
+func (ru_RU_errors) SubmitAgain() string {
+    return "Неа, второй раз не пройдет 🛡️"
+}
+func (ru_RU_errors) QueueIdCollision() string {
+    return "С шансом 0,0000059605% произошла коллизия id очереди, попробуй создать снова 🤪"
 }
 
 

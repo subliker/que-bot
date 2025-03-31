@@ -17,12 +17,14 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		queryBundle := c.langBundle(ctx.Query().Sender.LanguageCode).Query()
 
 		// format queue name from query
-		queueName := strings.TrimSpace(ctx.Query().Text)
-		queueName = inputText.ReplaceAllString(queueName, "")
-		if len(queueName) > 45 {
-			queueName = queueName[:45]
+		queueName := inputText.ReplaceAllString(ctx.Query().Text, "")
+		queueName = strings.TrimSpace(queueName)
+
+		if len(queueName) > 62-queueQueryBtnSubmitLength {
+			queueName = queueName[:62-queueQueryBtnSubmitLength]
 			if !utf8.ValidString(queueName) {
-				queueName = queueName[:44]
+				queueNameRunes := []rune(queueName)
+				queueName = string(queueNameRunes[:len(queueNameRunes)-1])
 			}
 		}
 
@@ -48,8 +50,7 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		mk := c.client.NewMarkup()
 		btn := queueQueryBtnNew
 		btn.Text = queryBundle.Btns().New()
-		// generate uniq queue uuid
-		btn.Data = queueName
+		btn = queueQueryBtnNewData(btn, queueName)
 		mk.Inline(tele.Row{btn})
 		if err := ctx.Answer(&tele.QueryResponse{
 			Results: tele.Results{
