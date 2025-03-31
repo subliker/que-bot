@@ -19,8 +19,9 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		// format queue name from query
 		queueName := inputText.ReplaceAllString(ctx.Query().Text, "")
 		queueName = strings.TrimSpace(queueName)
-		if len(queueName) > 64-queueQueryBtnSubmitLength {
-			queueName = queueName[:64-queueQueryBtnSubmitLength]
+
+		if len(queueName) > 62-queueQueryBtnSubmitLength {
+			queueName = queueName[:62-queueQueryBtnSubmitLength]
 			if !utf8.ValidString(queueName) {
 				queueNameRunes := []rune(queueName)
 				queueName = string(queueNameRunes[:len(queueNameRunes)-1])
