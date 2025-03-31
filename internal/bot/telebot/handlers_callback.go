@@ -13,7 +13,7 @@ import (
 
 var queueQueryBtnNew = tele.Btn{
 	Text:   "new",
-	Unique: "new-queue",
+	Unique: "new",
 }
 
 func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
@@ -50,8 +50,12 @@ func (c *controller) handleQueueQueryBtnNew() tele.HandlerFunc {
 
 var queueQueryBtnSubmit = tele.Btn{
 	Text:   "submit",
-	Unique: "submit-queue",
+	Unique: "submit",
 }
+
+var queueQueryBtnSubmitLength = len(strings.Join([]string{
+	queueQueryBtnSubmit.Unique, string(queue.GenID("")),
+}, "|"))
 
 func (c *controller) handleQueueQueryBtnSubmit() tele.HandlerFunc {
 	return func(ctx tele.Context) error {
