@@ -50,6 +50,9 @@ func NewController(logger logger.Logger,
 
 	// set middlewares
 	c.client.Use(c.middlewareRecover)
+	if cfg.Debug {
+		c.client.Use(c.middlewareDebug)
+	}
 
 	// set queue dispatcher
 	c.queueDispatcher = qd
@@ -69,6 +72,7 @@ func (c *controller) Run(ctx context.Context) {
 		cancel()
 	}()
 	<-ctx.Done()
+	c.logger.Info("bot stopped")
 }
 
 func (c *controller) onError(err error, ctx tele.Context) {
