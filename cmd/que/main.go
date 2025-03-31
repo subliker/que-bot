@@ -23,7 +23,7 @@ func main() {
 	zap.Logger = logger
 
 	// making queue dispatcher
-	qd := dispatcher.NewQueueDispatcher(cfg.Dispatcher)
+	qd := dispatcher.NewQueueDispatcher(cfg.Dispatcher, logger)
 
 	// making bot controller
 	bc, err := telebot.NewController(logger, cfg.Bot, qd)
