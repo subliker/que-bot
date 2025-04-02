@@ -5,9 +5,9 @@ import (
 
 	"github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/kr/pretty"
+	"github.com/subliker/logger"
 	"github.com/subliker/que-bot/internal/dispatcher/queue"
 	"github.com/subliker/que-bot/internal/domain/telegram"
-	"github.com/subliker/que-bot/internal/logger"
 )
 
 type QueueDispatcher interface {

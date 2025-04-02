@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/subliker/logger"
 	"github.com/subliker/que-bot/internal/bot"
 	"github.com/subliker/que-bot/internal/dispatcher"
-	"github.com/subliker/que-bot/internal/logger"
 	tele "gopkg.in/telebot.v4"
 )
 
