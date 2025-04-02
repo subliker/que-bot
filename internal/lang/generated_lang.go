@@ -70,6 +70,7 @@ type callbackqueue interface{
 type callbackbtns interface{
     SubmitFirst() string
     Submit(num int) string
+    Remove() string
     Relive() string
 }
 type errors interface{
@@ -78,7 +79,9 @@ type errors interface{
     Tail() string
     Internal() string
     SubmitAgain() string
+    RemoveIfNot() string
     QueueIdCollision() string
+    RetryAfter() string
 }
 
 type ru_RU_Messages struct{}
@@ -195,6 +198,9 @@ func (ru_RU_callbackbtns) Submit(num int) string {
         return fmt.Sprintf("%d", num)
     }
 }
+func (ru_RU_callbackbtns) Remove() string {
+    return "Удали меня из очереди ❌"
+}
 func (ru_RU_callbackbtns) Relive() string {
     return "Возродить очередь! ⛪"
 }
@@ -222,8 +228,14 @@ func (ru_RU_errors) Internal() string {
 func (ru_RU_errors) SubmitAgain() string {
     return "Неа, второй раз не пройдет 🛡️"
 }
+func (ru_RU_errors) RemoveIfNot() string {
+    return "Тебе нет в очереди, не трать мое время 🤠"
+}
 func (ru_RU_errors) QueueIdCollision() string {
     return "С шансом 0,0000059605% произошла коллизия id очереди, попробуй создать снова 🤪"
+}
+func (ru_RU_errors) RetryAfter() string {
+    return "Ты че-то переборщил с запросами, попробуй позже 😨"
 }
 
 

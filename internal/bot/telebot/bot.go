@@ -8,6 +8,7 @@ import (
 	"github.com/subliker/logger"
 	"github.com/subliker/que-bot/internal/bot"
 	"github.com/subliker/que-bot/internal/dispatcher"
+	"github.com/subliker/que-bot/internal/lang"
 	tele "gopkg.in/telebot.v4"
 )
 
@@ -15,6 +16,8 @@ type controller struct {
 	// client interacts with telegram api
 	client          *tele.Bot
 	queueDispatcher dispatcher.QueueDispatcher
+
+	bundle lang.Messages
 
 	logger logger.Logger
 }
@@ -56,6 +59,13 @@ func NewController(logger logger.Logger,
 
 	// set queue dispatcher
 	c.queueDispatcher = qd
+
+	// set lang bundle
+	var ok bool
+	c.bundle, ok = lang.MessagesFor(cfg.Lang)
+	if !ok {
+		return nil, fmt.Errorf("error incorrect language code: %s", cfg.Lang)
+	}
 
 	// initialize handlers
 	c.initHandlers()

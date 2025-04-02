@@ -6,6 +6,7 @@ logger:
 bot:
   token: <your-telegram-bot-api-token> # required # Token is bot father telegram token for bot api
   long_poller_timeout: 10 # default # LongPollerTimeout is time(in seconds) of response waiting
+  lang: ru-RU # default # Bot localization language
   debug: false # default # Debug turns on debugging all contexts data
 
 queue_dispatcher:
