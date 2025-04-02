@@ -112,7 +112,7 @@ func (c *controller) handleQueueBtnSubmit() tele.HandlerFunc {
 
 		// submit person and get list
 		sender := ctx.Callback().Sender
-		list, unlock, err := c.queueDispatcher.SubmitSenderAndList(
+		list, err := c.queueDispatcher.SubmitSenderAndList(
 			queueID,
 			telegram.SenderID(sender.ID),
 			telegram.Person{
@@ -135,7 +135,6 @@ func (c *controller) handleQueueBtnSubmit() tele.HandlerFunc {
 			ctx.RespondAlert(errorBundle.Internal())
 			return fmt.Errorf("error submitting sender or getting list: %w", err)
 		}
-		defer unlock()
 
 		// edit message
 		if err := ctx.Edit(c.queueText(queueName, list), &tele.SendOptions{
@@ -164,7 +163,7 @@ func (c *controller) handleQueueBtnRemove() tele.HandlerFunc {
 
 		// submit person and get list
 		sender := ctx.Callback().Sender
-		list, unlock, err := c.queueDispatcher.RemoveSenderAndList(
+		list, err := c.queueDispatcher.RemoveSenderAndList(
 			queueID,
 			telegram.SenderID(sender.ID))
 		if errors.Is(err, dispatcher.ErrQueueSenderNotExists) {
@@ -182,7 +181,6 @@ func (c *controller) handleQueueBtnRemove() tele.HandlerFunc {
 			ctx.RespondAlert(errorBundle.Internal())
 			return fmt.Errorf("error removing sender or getting list: %w", err)
 		}
-		defer unlock()
 
 		// edit message
 		err = ctx.Edit(c.queueText(queueName, list), &tele.SendOptions{

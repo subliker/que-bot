@@ -85,30 +85,30 @@ func (q *Queue) List() []telegram.Person {
 	return arr
 }
 
-func (q *Queue) LockedAppendAndList(senderID telegram.SenderID, person telegram.Person) ([]telegram.Person, func(), bool) {
+func (q *Queue) LockedAppendAndList(senderID telegram.SenderID, person telegram.Person) ([]telegram.Person, bool) {
 	q.mu.Lock()
+	defer q.mu.Unlock()
 
 	// append
 	ok := q.Append(senderID, person)
 	if !ok {
-		q.mu.Unlock()
-		return nil, func() {}, false
+		return nil, false
 	}
 
 	// get list
-	return q.List(), q.mu.Unlock, true
+	return q.List(), true
 }
 
-func (q *Queue) LockedDeleteAndList(senderID telegram.SenderID) ([]telegram.Person, func(), bool) {
+func (q *Queue) LockedDeleteAndList(senderID telegram.SenderID) ([]telegram.Person, bool) {
 	q.mu.Lock()
+	defer q.mu.Unlock()
 
 	// delete
 	ok := q.Delete(senderID)
 	if !ok {
-		q.mu.Unlock()
-		return nil, func() {}, false
+		return nil, false
 	}
 
 	// get list
-	return q.List(), q.mu.Unlock, true
+	return q.List(), true
 }

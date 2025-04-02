@@ -36,13 +36,13 @@ type QueueDispatcher interface {
 	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
 	//
 	// Returns ErrQueueSenderAlreadyExists if sender with sender id already exists in queue
-	SubmitSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) (persons []telegram.Person, unlock func(), err error)
+	SubmitSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) (persons []telegram.Person, err error)
 	// RemoveSenderAndList removes sender from queue and returns actual persons list
 	//
 	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
 	//
 	// Returns ErrQueueSenderNotExists if sender with sender id doesn't exist in queue
-	RemoveSenderAndList(queueID queue.ID, senderID telegram.SenderID) (persons []telegram.Person, unlock func(), err error)
+	RemoveSenderAndList(queueID queue.ID, senderID telegram.SenderID) (persons []telegram.Person, err error)
 }
 
 type queueDispatcher struct {
@@ -109,21 +109,21 @@ func (qd *queueDispatcher) List(queueID queue.ID) ([]telegram.Person, error) {
 	return lst, nil
 }
 
-func (qd *queueDispatcher) SubmitSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) ([]telegram.Person, func(), error) {
+func (qd *queueDispatcher) SubmitSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) ([]telegram.Person, error) {
 	// get queue
 	q, ok := qd.qs.Get(queueID)
 	if !ok {
-		return nil, func() {}, ErrQueueNotExists
+		return nil, ErrQueueNotExists
 	}
 
 	// append and get list with lock
-	lst, unlock, ok := q.LockedAppendAndList(senderID, person)
+	lst, ok := q.LockedAppendAndList(senderID, person)
 	if !ok {
-		return nil, func() {}, ErrQueueSenderAlreadyExists
+		return nil, ErrQueueSenderAlreadyExists
 	}
 
 	qd.logger.Debugf("queue(%s) was submitted with sender(%s) with data: \n%# v\n and listed: \n%# v", queueID, senderID, pretty.Formatter(person), pretty.Formatter(lst))
-	return lst, unlock, nil
+	return lst, nil
 }
 
 func (qd *queueDispatcher) RemoveSender(queueID queue.ID, senderID telegram.SenderID) error {
@@ -143,21 +143,21 @@ func (qd *queueDispatcher) RemoveSender(queueID queue.ID, senderID telegram.Send
 	return nil
 }
 
-func (qd *queueDispatcher) RemoveSenderAndList(queueID queue.ID, senderID telegram.SenderID) ([]telegram.Person, func(), error) {
+func (qd *queueDispatcher) RemoveSenderAndList(queueID queue.ID, senderID telegram.SenderID) ([]telegram.Person, error) {
 	// get queue
 	q, ok := qd.qs.Get(queueID)
 	if !ok {
-		return nil, func() {}, ErrQueueNotExists
+		return nil, ErrQueueNotExists
 	}
 
 	// dele and get list with lock
-	lst, unlock, ok := q.LockedDeleteAndList(senderID)
+	lst, ok := q.LockedDeleteAndList(senderID)
 	if !ok {
-		return nil, func() {}, ErrQueueSenderNotExists
+		return nil, ErrQueueSenderNotExists
 	}
 
 	qd.logger.Debugf("sender(%s) was deleted from queue(%s) and queue listed: \n%# v", senderID, queueID, pretty.Formatter(lst))
-	return lst, unlock, nil
+	return lst, nil
 }
 
 func (qd *queueDispatcher) onCleanup(queueID queue.ID, q *queue.Queue) {
