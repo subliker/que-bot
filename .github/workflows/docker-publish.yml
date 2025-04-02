@@ -1,0 +1,44 @@
+name: Publish Docker Image to GHCR
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract Git tag
+        id: get-tag
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/v}"
+          echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+          echo "Using tag: ${TAG_NAME}"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ join(steps.get-tag.outputs.*, '\n') }}
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.repository_url }}
