@@ -4,11 +4,11 @@ import (
 	"context"
 	"flag"
 
+	"github.com/subliker/logger/zap"
 	"github.com/subliker/que-bot/internal/app"
 	"github.com/subliker/que-bot/internal/bot/telebot"
 	"github.com/subliker/que-bot/internal/config"
 	"github.com/subliker/que-bot/internal/dispatcher"
-	"github.com/subliker/que-bot/internal/logger/zap"
 )
 
 func main() {
@@ -23,7 +23,7 @@ func main() {
 	zap.Logger = logger
 
 	// making queue dispatcher
-	qd := dispatcher.NewQueueDispatcher(cfg.Dispatcher)
+	qd := dispatcher.NewQueueDispatcher(cfg.Dispatcher, logger)
 
 	// making bot controller
 	bc, err := telebot.NewController(logger, cfg.Bot, qd)

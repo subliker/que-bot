@@ -14,11 +14,10 @@ func (c *controller) handleStart() tele.HandlerFunc {
 			"message_id", ctx.Message().ID,
 		)
 
-		bundle := c.langBundle(ctx.Sender().LanguageCode)
 		// send start message
 		if err := ctx.Send(
-			bundle.StartMessage().Head(ctx.Sender().FirstName)+
-				bundle.StartMessage().Main(c.client.Me.Username),
+			c.bundle.StartMessage().Head(ctx.Sender().FirstName)+
+				c.bundle.StartMessage().Main(c.client.Me.Username),
 			&tele.SendOptions{
 				ParseMode: tele.ModeHTML,
 			},

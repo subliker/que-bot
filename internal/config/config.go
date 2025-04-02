@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/subliker/logger/zap"
 	"github.com/subliker/que-bot/internal/bot/telebot"
 	"github.com/subliker/que-bot/internal/dispatcher"
-	"github.com/subliker/que-bot/internal/logger/zap"
 	"github.com/subliker/que-bot/internal/validation"
 )
 

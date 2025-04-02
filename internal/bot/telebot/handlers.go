@@ -9,6 +9,7 @@ func (c *controller) initHandlers() {
 	c.client.Handle("/start", c.handleStart())
 	c.client.Handle(tele.OnQuery, c.handleQuery())
 
-	c.client.Handle(&queueQueryBtnSubmit, c.handleQueueQueryBtnSubmit())
-	c.client.Handle(&queueQueryBtnNew, c.handleQueueQueryBtnNew())
+	c.client.Handle(&queueBtnSubmit, c.handleQueueBtnSubmit())
+	c.client.Handle(&queueBtnRemove, c.handleQueueBtnRemove())
+	c.client.Handle(&queueBtnNew, c.handleQueueBtnNew())
 }

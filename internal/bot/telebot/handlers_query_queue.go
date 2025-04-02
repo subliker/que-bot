@@ -9,19 +9,40 @@ import (
 	tele "gopkg.in/telebot.v4"
 )
 
+var queueBtnNew = tele.Btn{
+	Text:   "new",
+	Unique: "new",
+}
+
+func (c *controller) queueBtnNewMarkup(queueName string) *tele.ReplyMarkup {
+	mk := c.client.NewMarkup()
+	btn := queueBtnNew
+	btn.Text = c.bundle.Query().Btns().New()
+	btn = queueBtnNewData(btn, queueName)
+	mk.Inline(tele.Row{btn})
+	return mk
+}
+
+func queueBtnNewData(btn tele.Btn, queueName string) tele.Btn {
+	btn.Data = queueName
+	return btn
+}
+
 func (c *controller) handleQuery() tele.HandlerFunc {
 	return func(ctx tele.Context) error {
 		ctx.Set("handler_type", "query")
 		ctx.Set("handler", "queue_query")
 
-		queryBundle := c.langBundle(ctx.Query().Sender.LanguageCode).Query()
+		queryBundle := c.bundle.Query()
 
 		// format queue name from query
-		queueName := inputText.ReplaceAllString(ctx.Query().Text, "")
+		queueName := queryTextRegexp.ReplaceAllString(ctx.Query().Text, "")
 		queueName = strings.TrimSpace(queueName)
 
-		if len(queueName) > 62-queueQueryBtnSubmitLength {
-			queueName = queueName[:62-queueQueryBtnSubmitLength]
+		// 62 = all
+		// 11 = 8 bytes of id + 2 byte of | + 2 byte(now max) of btn unique
+		if len(queueName) > 62-11 {
+			queueName = queueName[:62-11]
 			if !utf8.ValidString(queueName) {
 				queueNameRunes := []rune(queueName)
 				queueName = string(queueNameRunes[:len(queueNameRunes)-1])
@@ -47,11 +68,6 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		}
 
 		// handle answer
-		mk := c.client.NewMarkup()
-		btn := queueQueryBtnNew
-		btn.Text = queryBundle.Btns().New()
-		btn = queueQueryBtnNewData(btn, queueName)
-		mk.Inline(tele.Row{btn})
 		if err := ctx.Answer(&tele.QueryResponse{
 			Results: tele.Results{
 				&tele.ArticleResult{
@@ -59,7 +75,7 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 					Description: queryBundle.Main().Description(),
 					Text:        queryBundle.Main().Text(queueName),
 					ResultBase: tele.ResultBase{
-						ReplyMarkup: mk,
+						ReplyMarkup: c.queueBtnNewMarkup(queueName),
 					},
 				},
 			},

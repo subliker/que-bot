@@ -7,8 +7,8 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/subliker/logger"
 	"github.com/subliker/que-bot/internal/bot"
-	"github.com/subliker/que-bot/internal/logger"
 )
 
 // App is interface to interact with application layers.
