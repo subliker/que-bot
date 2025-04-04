@@ -43,14 +43,20 @@ type startMessage interface{
     Main(bot_user_name string) string
 }
 type query interface{
-    Main() querymain
+    Queue() queryqueue
+    PlacedQueue() queryplacedQueue
     Btns() querybtns
+    TextNoGroup() string
 }
-type querymain interface{
+type queryqueue interface{
     Title(queue_name string) string
     Description() string
     Text(queue_name string) string
-    TextNoGroup() string
+}
+type queryplacedQueue interface{
+    Title(queue_count int, queue_name string) string
+    Description() string
+    Text(queue_count int, queue_name string) string
 }
 type querybtns interface{
     New() string
@@ -112,29 +118,55 @@ func (ru_RU_Messages) Query() query {
     return ru_RU_query{}
 }
 type ru_RU_query struct{}
-func (ru_RU_query) Main() querymain {
-    return ru_RU_querymain{}
+func (ru_RU_query) Queue() queryqueue {
+    return ru_RU_queryqueue{}
 }
-type ru_RU_querymain struct{}
-func (ru_RU_querymain) Title(queue_name string) string {
+type ru_RU_queryqueue struct{}
+func (ru_RU_queryqueue) Title(queue_name string) string {
     if queue_name != "" {
         return fmt.Sprintf("Создать очередь %s 🔨", queue_name)
     } else {
         return "Создать очередь 🔨"
     }
 }
-func (ru_RU_querymain) Description() string {
+func (ru_RU_queryqueue) Description() string {
     return "Стандартная очередь по нажатию кнопки"
 }
-func (ru_RU_querymain) Text(queue_name string) string {
+func (ru_RU_queryqueue) Text(queue_name string) string {
     if queue_name != "" {
         return fmt.Sprintf("Чтобы создать стандартную очередь *%s*, нажми на кнопку ниже 🚀", queue_name)
     } else {
         return "Чтобы создать стандартную очередь, нажми на кнопку ниже 🚀"
     }
 }
-func (ru_RU_querymain) TextNoGroup() string {
-    return "Очередь можно создать только в группе! 🫥"
+func (ru_RU_query) PlacedQueue() queryplacedQueue {
+    return ru_RU_queryplacedQueue{}
+}
+type ru_RU_queryplacedQueue struct{}
+func (ru_RU_queryplacedQueue) Title(queue_count int, queue_name string) string {
+    if queue_name != "" && queue_count!=0 {
+        return fmt.Sprintf("Создать очередь с %d местами %s 🔨", queue_count, queue_name)
+    } else if queue_name != "" {
+        return "Укажите количество мест"
+    } else if queue_count!=0 {
+        return fmt.Sprintf("Создать очередь с %d местами 🔨", queue_count)
+    } else {
+        return "Укажите количество мест"
+    }
+}
+func (ru_RU_queryplacedQueue) Description() string {
+    return "Очередь с возможностью выбора места"
+}
+func (ru_RU_queryplacedQueue) Text(queue_count int, queue_name string) string {
+    if queue_name != "" && queue_count!=0 {
+        return fmt.Sprintf("Чтобы создать очередь с %d местами *%s*, нажми на кнопку ниже 🚀", queue_count, queue_name)
+    } else if queue_name != "" {
+        return "Укажите количество мест, чтобы создать очередь с местами 😉"
+    } else if queue_count!=0 {
+        return fmt.Sprintf("Чтобы создать очередь с %d местами, нажми на кнопку ниже 🚀", queue_count)
+    } else {
+        return "Укажите количество мест, чтобы создать очередь с местами 😉"
+    }
 }
 func (ru_RU_query) Btns() querybtns {
     return ru_RU_querybtns{}
@@ -142,6 +174,9 @@ func (ru_RU_query) Btns() querybtns {
 type ru_RU_querybtns struct{}
 func (ru_RU_querybtns) New() string {
     return "🔨 Создать очередь 🔨"
+}
+func (ru_RU_query) TextNoGroup() string {
+    return "Очередь можно создать только в группе! 🫥"
 }
 func (ru_RU_Messages) Callback() callback {
     return ru_RU_callback{}
