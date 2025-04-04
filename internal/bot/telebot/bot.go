@@ -9,6 +9,7 @@ import (
 	"github.com/subliker/que-bot/internal/bot"
 	"github.com/subliker/que-bot/internal/dispatcher"
 	"github.com/subliker/que-bot/internal/lang"
+	"github.com/subliker/que-bot/internal/limiter"
 	tele "gopkg.in/telebot.v4"
 )
 
@@ -16,6 +17,7 @@ type controller struct {
 	// client interacts with telegram api
 	client          *tele.Bot
 	queueDispatcher dispatcher.QueueDispatcher
+	limiter         limiter.Limiter
 
 	bundle lang.Messages
 
@@ -25,7 +27,8 @@ type controller struct {
 // NewController creates new bot controller instance
 func NewController(logger logger.Logger,
 	cfg Config,
-	qd dispatcher.QueueDispatcher) (bot.Controller, error) {
+	qd dispatcher.QueueDispatcher,
+	limiter limiter.Limiter) (bot.Controller, error) {
 	var c controller
 
 	// set logger
@@ -59,6 +62,9 @@ func NewController(logger logger.Logger,
 
 	// set queue dispatcher
 	c.queueDispatcher = qd
+
+	// set limiter
+	c.limiter = limiter
 
 	// set lang bundle
 	var ok bool

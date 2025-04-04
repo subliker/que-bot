@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/subliker/que-bot/internal/dispatcher"
 	"github.com/subliker/que-bot/internal/dispatcher/queue"
@@ -136,14 +137,21 @@ func (c *controller) handleQueueBtnSubmit() tele.HandlerFunc {
 			return fmt.Errorf("error submitting sender or getting list: %w", err)
 		}
 
-		// edit message
-		if err := ctx.Edit(c.queueText(queueName, list), &tele.SendOptions{
-			ReplyMarkup:           c.queueMarkup(queueID, queueName, len(list)),
-			DisableWebPagePreview: true,
-			ParseMode:             tele.ModeMarkdown,
-		}); err != nil && !strings.Contains(err.Error(), "True") {
-			return fmt.Errorf("error editing message: %w", err)
-		}
+		// edit message with limiter
+		c.limiter.Do(string(queueID), func() {
+			if err := ctx.Edit(c.queueText(queueName, list), &tele.SendOptions{
+				ReplyMarkup:           c.queueMarkup(queueID, queueName, len(list)),
+				DisableWebPagePreview: true,
+				ParseMode:             tele.ModeMarkdown,
+			}); err != nil && !strings.Contains(err.Error(), "True") {
+				c.logger.
+					WithFields("handler_type", "callback",
+						"handler", "queue_btn_submit").
+					Errorf("error editing message: %w", err)
+				return
+			}
+		}, time.Second)
+
 		return nil
 	}
 }
@@ -182,17 +190,21 @@ func (c *controller) handleQueueBtnRemove() tele.HandlerFunc {
 			return fmt.Errorf("error removing sender or getting list: %w", err)
 		}
 
-		// edit message
-		err = ctx.Edit(c.queueText(queueName, list), &tele.SendOptions{
-			ReplyMarkup:           c.queueMarkup(queueID, queueName, len(list)),
-			DisableWebPagePreview: true,
-			ParseMode:             tele.ModeMarkdown,
-		})
-		if err != nil {
-			if !strings.Contains(err.Error(), "True") {
-				return fmt.Errorf("error editing message: %w", err)
+		// edit message with limiter
+		c.limiter.Do(string(queueID), func() {
+			err := ctx.Edit(c.queueText(queueName, list), &tele.SendOptions{
+				ReplyMarkup:           c.queueMarkup(queueID, queueName, len(list)),
+				DisableWebPagePreview: true,
+				ParseMode:             tele.ModeMarkdown,
+			})
+			if err != nil && !strings.Contains(err.Error(), "True") {
+				c.logger.
+					WithFields("handler_type", "callback",
+						"handler", "queue_btn_submit").
+					Errorf("error editing message: %w", err)
+				return
 			}
-		}
+		}, time.Second)
 
 		return nil
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/subliker/que-bot/internal/bot/telebot"
 	"github.com/subliker/que-bot/internal/config"
 	"github.com/subliker/que-bot/internal/dispatcher"
+	"github.com/subliker/que-bot/internal/limiter"
 )
 
 func main() {
@@ -25,8 +26,11 @@ func main() {
 	// making queue dispatcher
 	qd := dispatcher.NewQueueDispatcher(cfg.Dispatcher, logger)
 
+	// making limiter
+	limiter := limiter.New()
+
 	// making bot controller
-	bc, err := telebot.NewController(logger, cfg.Bot, qd)
+	bc, err := telebot.NewController(logger, cfg.Bot, qd, limiter)
 	if err != nil {
 		logger.Fatalf("error making bot controller: %s", err)
 	}
