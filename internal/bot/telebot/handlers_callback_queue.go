@@ -144,13 +144,18 @@ func (c *controller) handleQueueBtnSubmit() tele.HandlerFunc {
 				DisableWebPagePreview: true,
 				ParseMode:             tele.ModeMarkdown,
 			}); err != nil && !strings.Contains(err.Error(), "True") {
+				if strings.Contains(err.Error(), "retry after") {
+					errorBundle := c.bundle.Errors()
+					ctx.RespondAlert(errorBundle.RetryAfter())
+					return
+				}
 				c.logger.
 					WithFields("handler_type", "callback",
 						"handler", "queue_btn_submit").
-					Errorf("error editing message: %w", err)
+					Errorf("error editing message: %s", err)
 				return
 			}
-		}, time.Second)
+		}, time.Millisecond*1500)
 
 		return nil
 	}
@@ -198,13 +203,18 @@ func (c *controller) handleQueueBtnRemove() tele.HandlerFunc {
 				ParseMode:             tele.ModeMarkdown,
 			})
 			if err != nil && !strings.Contains(err.Error(), "True") {
+				if strings.Contains(err.Error(), "retry after") {
+					errorBundle := c.bundle.Errors()
+					ctx.RespondAlert(errorBundle.RetryAfter())
+					return
+				}
 				c.logger.
 					WithFields("handler_type", "callback",
 						"handler", "queue_btn_submit").
-					Errorf("error editing message: %w", err)
+					Errorf("error editing message: %s", err)
 				return
 			}
-		}, time.Second)
+		}, time.Millisecond*1500)
 
 		return nil
 	}
