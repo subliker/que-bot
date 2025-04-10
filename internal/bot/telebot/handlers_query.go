@@ -73,11 +73,16 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		queueMemberCount := 0
 		queueNameWithMembersCount := ""
 		queueSplit := strings.Split(queueName, " ")
+		var placedQueueReplyMarkup tele.ResultBase
 		if len(queueSplit) > 0 {
 			var err error
 			queueMemberCount, err = strconv.Atoi(queueSplit[len(queueSplit)-1])
 			if err == nil {
+				// if queue member count is set
 				queueNameWithMembersCount = strings.Join(queueSplit[:len(queueSplit)-1], " ")
+				placedQueueReplyMarkup = tele.ResultBase{
+					ReplyMarkup: c.placedQueueBtnNewMarkup(queueName),
+				}
 			}
 		}
 
@@ -93,7 +98,7 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 						Text:        queryBundle.TextNoGroup(),
 					},
 					&tele.ArticleResult{
-						Title:       queryBundle.PlacedQueue().Title(queueMemberCount, queueNameWithMembersCount),
+						Title:       queryBundle.PlacedQueue().Title(queueNameWithMembersCount, queueMemberCount),
 						Description: queryBundle.PlacedQueue().Description(),
 						Text:        queryBundle.TextNoGroup(),
 					},
@@ -116,12 +121,10 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 					},
 				},
 				&tele.ArticleResult{
-					Title:       queryBundle.PlacedQueue().Title(queueMemberCount, queueNameWithMembersCount),
+					Title:       queryBundle.PlacedQueue().Title(queueNameWithMembersCount, queueMemberCount),
 					Description: queryBundle.PlacedQueue().Description(),
-					Text:        queryBundle.PlacedQueue().Text(queueMemberCount, queueNameWithMembersCount),
-					ResultBase: tele.ResultBase{
-						ReplyMarkup: c.placedQueueBtnNewMarkup(queueName),
-					},
+					Text:        queryBundle.PlacedQueue().Text(queueNameWithMembersCount, queueMemberCount),
+					ResultBase:  placedQueueReplyMarkup,
 				},
 			},
 			CacheTime: 1,

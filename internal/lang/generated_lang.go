@@ -54,9 +54,9 @@ type queryqueue interface{
     Text(queue_name string) string
 }
 type queryplacedQueue interface{
-    Title(queue_count int, queue_name string) string
+    Title(queue_name string, queue_count int) string
     Description() string
-    Text(queue_count int, queue_name string) string
+    Text(queue_name string, queue_count int) string
 }
 type querybtns interface{
     New() string
@@ -143,9 +143,9 @@ func (ru_RU_query) PlacedQueue() queryplacedQueue {
     return ru_RU_queryplacedQueue{}
 }
 type ru_RU_queryplacedQueue struct{}
-func (ru_RU_queryplacedQueue) Title(queue_count int, queue_name string) string {
+func (ru_RU_queryplacedQueue) Title(queue_name string, queue_count int) string {
     if queue_name != "" && queue_count!=0 {
-        return fmt.Sprintf("Создать очередь с %d местами %s 🔨", queue_count, queue_name)
+        return fmt.Sprintf("Создать очередь %s с %d местами 🔨", queue_name, queue_count)
     } else if queue_name != "" {
         return "Укажите количество мест"
     } else if queue_count!=0 {
@@ -157,9 +157,9 @@ func (ru_RU_queryplacedQueue) Title(queue_count int, queue_name string) string {
 func (ru_RU_queryplacedQueue) Description() string {
     return "Очередь с возможностью выбора места"
 }
-func (ru_RU_queryplacedQueue) Text(queue_count int, queue_name string) string {
+func (ru_RU_queryplacedQueue) Text(queue_name string, queue_count int) string {
     if queue_name != "" && queue_count!=0 {
-        return fmt.Sprintf("Чтобы создать очередь с %d местами *%s*, нажми на кнопку ниже 🚀", queue_count, queue_name)
+        return fmt.Sprintf("Чтобы создать очередь *%s* с %d местами, нажми на кнопку ниже 🚀", queue_name, queue_count)
     } else if queue_name != "" {
         return "Укажите количество мест, чтобы создать очередь с местами 😉"
     } else if queue_count!=0 {
