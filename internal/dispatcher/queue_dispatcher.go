@@ -47,6 +47,12 @@ type QueueDispatcher interface {
 	//
 	// Returns ErrQueueSenderAlreadyExists if sender with sender id already exists in queue
 	SubmitSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) (persons []telegram.Person, err error)
+	// SubmitHeadPlacedSenderAndList submits sender person in first empty place and returns actual persons list
+	//
+	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
+	//
+	// Returns ErrQueuePlacesOver if places is over
+	SubmitHeadPlacedSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) (persons []telegram.Person, err error)
 	// SubmitPlacedSenderAndList submits sender person in memberPlace place and returns actual persons list
 	//
 	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
@@ -179,6 +185,23 @@ func (qd *queueDispatcher) SubmitSenderAndList(queueID queue.ID, senderID telegr
 	return lst, nil
 }
 
+func (qd *queueDispatcher) SubmitHeadPlacedSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) (persons []telegram.Person, err error) {
+	// get queue
+	q, ok := qd.qs.Get(queueID)
+	if !ok {
+		return nil, ErrQueueNotExists
+	}
+
+	// place head and get list with lock
+	lst, ok := q.LockedPlaceHeadAndList(senderID, person)
+	if !ok {
+		return nil, ErrQueuePlacesOver
+	}
+
+	qd.logger.Debugf("placed queue(%s) was submitted head with sender(%s) with data: \n%# v\n and listed: \n%# v", queueID, senderID, pretty.Formatter(person), pretty.Formatter(lst))
+	return lst, nil
+}
+
 func (qd *queueDispatcher) SubmitPlacedSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person, memberPlace int) (persons []telegram.Person, err error) {
 	// get queue
 	q, ok := qd.qs.Get(queueID)
@@ -186,7 +209,7 @@ func (qd *queueDispatcher) SubmitPlacedSenderAndList(queueID queue.ID, senderID 
 		return nil, ErrQueueNotExists
 	}
 
-	// append and get list with lock
+	// place and get list with lock
 	lst, ok := q.LockedPlaceAndList(senderID, person, memberPlace)
 	if !ok {
 		return nil, ErrQueueMemberCountIncorrect

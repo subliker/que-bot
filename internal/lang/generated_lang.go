@@ -94,6 +94,7 @@ type errors interface{
     RemoveIfNot() string
     QueueIdCollision() string
     RetryAfter() string
+    PlacesOver() string
 }
 
 type ru_RU_Messages struct{}
@@ -161,13 +162,13 @@ func (ru_RU_queryplacedQueue) Title(queue_name string, queue_count int) string {
     }
 }
 func (ru_RU_queryplacedQueue) Description() string {
-    return "Очередь с возможностью выбора места(от 1 до 100)"
+    return "Очередь с возможностью выбора места(от 1 до 99)"
 }
 func (ru_RU_queryplacedQueue) Text(queue_name string, queue_count int) string {
     if queue_name != "" && queue_count!=0 {
         return fmt.Sprintf("Чтобы создать очередь *%s* с %d местами, нажми на кнопку ниже 🚀", queue_name, queue_count)
     } else if queue_name != "" {
-        return "Укажите количество мест от 1 до 100, чтобы создать очередь с местами 😉"
+        return "Укажите количество мест от 1 до 99, чтобы создать очередь с местами 😉"
     } else if queue_count!=0 {
         return fmt.Sprintf("Чтобы создать очередь с %d местами, нажми на кнопку ниже 🚀", queue_count)
     } else {
@@ -294,6 +295,9 @@ func (ru_RU_errors) QueueIdCollision() string {
 }
 func (ru_RU_errors) RetryAfter() string {
     return "Ты че-то переборщил с запросами, попробуй позже 😨"
+}
+func (ru_RU_errors) PlacesOver() string {
+    return "Кажется места закончились 😨"
 }
 
 

@@ -14,6 +14,7 @@ func (c *controller) initHandlers() {
 	c.client.Handle(&qBtnNew, c.handleQueueBtnNew())
 
 	c.client.Handle(&pqBtnSubmit, c.handlePlacedQueueBtnSubmit())
+	c.client.Handle(&pqBtnSubmitHead, c.handlePlacedQueueBtnSubmitHead())
 	c.client.Handle(&pqBtnRemove, c.handlePlacedQueueBtnRemove())
 	c.client.Handle(&pqBtnNew, c.handlePlacedQueueBtnNew())
 }

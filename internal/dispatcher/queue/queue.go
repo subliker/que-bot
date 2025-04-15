@@ -64,7 +64,7 @@ func (q *Queue) Append(senderID telegram.SenderID, person telegram.Person) bool 
 	return true
 }
 
-// Place returns true if sender was places and false if place is not available.
+// Place returns true if sender was placed and false if place is not available.
 //
 // If person is already in queue and choose available, it removes from old place and takes new.
 func (q *Queue) Place(senderID telegram.SenderID, person telegram.Person, place int) bool {
@@ -102,6 +102,34 @@ func (q *Queue) Place(senderID telegram.SenderID, person telegram.Person, place 
 	cur.senderID = senderID
 	q.ms[senderID] = struct{}{}
 	return true
+}
+
+// PlaceHead returns true if sender was placed and false if there are no places.
+func (q *Queue) PlaceHead(senderID telegram.SenderID, person telegram.Person) bool {
+	cur := q.head
+
+	// delete if already in queue
+	ncur := q.head
+	for ncur.next != nil {
+		if ncur.next.senderID == senderID {
+			ncur.next.senderID = 0
+			ncur.next.person = telegram.Person{}
+			break
+		}
+		ncur = ncur.next
+	}
+
+	// move to place
+	for cur.next != nil {
+		if cur.next.senderID == 0 {
+			cur.next.person = person
+			cur.next.senderID = senderID
+			return true
+
+		}
+		cur = cur.next
+	}
+	return false
 }
 
 func (q *Queue) Delete(senderID telegram.SenderID) bool {
@@ -167,6 +195,20 @@ func (q *Queue) LockedAppendAndList(senderID telegram.SenderID, person telegram.
 
 	// append
 	ok := q.Append(senderID, person)
+	if !ok {
+		return nil, false
+	}
+
+	// get list
+	return q.List(), true
+}
+
+func (q *Queue) LockedPlaceHeadAndList(senderID telegram.SenderID, person telegram.Person) ([]telegram.Person, bool) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	// append
+	ok := q.PlaceHead(senderID, person)
 	if !ok {
 		return nil, false
 	}

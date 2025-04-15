@@ -114,6 +114,67 @@ func (c *controller) handlePlacedQueueBtnSubmit() tele.HandlerFunc {
 	}
 }
 
+func (c *controller) handlePlacedQueueBtnSubmitHead() tele.HandlerFunc {
+	return func(ctx tele.Context) error {
+		defer ctx.Respond()
+		ctx.Set("handler_type", "callback")
+		ctx.Set("handler", "placed_queue_btn_submit_head")
+
+		// getting queue data
+		queueID, queueName, err := pqBtnSubmitHead.parseData(ctx.Callback().Data)
+		if err != nil {
+			return fmt.Errorf("error parsing placed queue submit head btn from callback: %w", err)
+		}
+
+		// submit person and get list
+		sender := ctx.Callback().Sender
+		list, err := c.queueDispatcher.SubmitHeadPlacedSenderAndList(
+			queue.ID(queueID),
+			telegram.SenderID(sender.ID),
+			telegram.Person{
+				Username:  sender.Username,
+				FirstName: sender.FirstName,
+				LastName:  sender.LastName,
+			})
+		if errors.Is(err, dispatcher.ErrQueuePlacesOver) {
+			errorBundle := c.bundle.Errors()
+			ctx.RespondText(errorBundle.PlacesOver())
+			return nil
+		}
+		if errors.Is(err, dispatcher.ErrQueueNotExists) {
+			errorBundle := c.bundle.Errors()
+			ctx.RespondAlert(errorBundle.QueueNotFound())
+			return nil
+		}
+		if err != nil {
+			errorBundle := c.bundle.Errors()
+			ctx.RespondAlert(errorBundle.Internal())
+			return fmt.Errorf("error submitting head placed sender or getting list: %w", err)
+		}
+
+		// edit message
+		c.limiter.Do(queueID, func() {
+			if err := ctx.Edit(c.bundle.Callback().PlacedQueue().Main(queueName), &tele.SendOptions{
+				ReplyMarkup:           c.placedQueueMarkup(queue.ID(queueID), queueName, list),
+				DisableWebPagePreview: true,
+				ParseMode:             tele.ModeMarkdown,
+			}); err != nil && !strings.Contains(err.Error(), "True") {
+				if strings.Contains(err.Error(), "retry after") {
+					errorBundle := c.bundle.Errors()
+					ctx.RespondAlert(errorBundle.RetryAfter())
+					return
+				}
+				c.logger.
+					WithFields("handler_type", "callback",
+						"handler", "queue_btn_submit").
+					Errorf("error editing message: %s", err)
+				return
+			}
+		}, time.Millisecond*1500)
+		return nil
+	}
+}
+
 func (c *controller) handlePlacedQueueBtnRemove() tele.HandlerFunc {
 	return func(ctx tele.Context) error {
 		defer ctx.Respond()
