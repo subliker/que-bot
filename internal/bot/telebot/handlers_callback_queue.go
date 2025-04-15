@@ -11,46 +11,6 @@ import (
 	tele "gopkg.in/telebot.v4"
 )
 
-var queueBtnSubmit = tele.Btn{
-	Text:   "st",
-	Unique: "st",
-}
-
-func queueBtnSubmitData(btn tele.Btn, queueID, queueName string) tele.Btn {
-	btn.Data = strings.Join([]string{string(queueID), queueName}, "|")
-	return btn
-}
-
-func (c *controller) queueSubmitFirstMarkup(queueID queue.ID, queueName string) *tele.ReplyMarkup {
-	mk := c.client.NewMarkup()
-	btn := queueBtnSubmit
-	btn.Text = c.bundle.Callback().Btns().SubmitFirst()
-	btn.Data = strings.Join([]string{string(queueID), queueName}, "|")
-	mk.Inline(tele.Row{btn})
-	return mk
-}
-
-var queueBtnRemove = tele.Btn{
-	Text:   "rm",
-	Unique: "rm",
-}
-
-func queueBtnRemoveData(btn tele.Btn, queueID, queueName string) tele.Btn {
-	btn.Data = strings.Join([]string{string(queueID), queueName}, "|")
-	return btn
-}
-
-func (c *controller) queueMarkup(queueID queue.ID, queueName string, lenList int) *tele.ReplyMarkup {
-	mk := c.client.NewMarkup()
-	btnSubmit, btnRemove := queueBtnSubmit, queueBtnRemove
-	btnSubmit.Text = c.bundle.Callback().Btns().Submit(lenList + 1)
-	btnRemove.Text = c.bundle.Callback().Btns().Remove()
-	btnSubmit = queueBtnSubmitData(btnSubmit, string(queueID), queueName)
-	btnRemove = queueBtnRemoveData(btnRemove, string(queueID), queueName)
-	mk.Inline(tele.Row{btnSubmit, btnRemove})
-	return mk
-}
-
 func (c *controller) queueText(queueName string, list []telegram.Person) string {
 	txt := c.bundle.Callback().Queue().Head(queueName) + "\n"
 	for i, p := range list {
@@ -66,7 +26,7 @@ func (c *controller) handleQueueBtnNew() tele.HandlerFunc {
 		ctx.Set("handler", "queue_btn_new")
 
 		// get queue data
-		queueName := ctx.Callback().Data
+		queueName := qBtnNew.parseData(ctx.Callback().Data)
 
 		// try to add queue
 		queueID := queue.GenID(queueName)
