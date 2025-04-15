@@ -64,16 +64,15 @@ func (c *controller) handleQueueBtnSubmit() tele.HandlerFunc {
 		ctx.Set("handler", "queue_btn_submit")
 
 		// getting queue data
-		data := strings.Split(ctx.Callback().Data, "|")
-		if len(data) != 2 {
-			return fmt.Errorf("callback length data arguments error")
+		queueID, queueName, err := qBtnSubmit.parseData(ctx.Callback().Data)
+		if err != nil {
+			return fmt.Errorf("error parsing queue submit btn from callback: %w", err)
 		}
-		queueID, queueName := queue.ID(data[0]), data[1]
 
 		// submit person and get list
 		sender := ctx.Callback().Sender
 		list, err := c.queueDispatcher.SubmitSenderAndList(
-			queueID,
+			queue.ID(queueID),
 			telegram.SenderID(sender.ID),
 			telegram.Person{
 				Username:  sender.Username,
@@ -98,7 +97,7 @@ func (c *controller) handleQueueBtnSubmit() tele.HandlerFunc {
 
 		// edit message
 		if err := ctx.Edit(c.queueText(queueName, list), &tele.SendOptions{
-			ReplyMarkup:           c.queueMarkup(queueID, queueName, len(list)),
+			ReplyMarkup:           c.queueMarkup(queue.ID(queueID), queueName, len(list)),
 			DisableWebPagePreview: true,
 			ParseMode:             tele.ModeMarkdown,
 		}); err != nil && !strings.Contains(err.Error(), "True") {
@@ -115,16 +114,15 @@ func (c *controller) handleQueueBtnRemove() tele.HandlerFunc {
 		ctx.Set("handler", "queue_query_btn_remove")
 
 		// getting queue data
-		data := strings.Split(ctx.Callback().Data, "|")
-		if len(data) != 2 {
-			return fmt.Errorf("callback length data arguments error")
+		queueID, queueName, err := qBtnRemove.parseData(ctx.Callback().Data)
+		if err != nil {
+			return fmt.Errorf("error parsing queue remove btn from callback: %w", err)
 		}
-		queueID, queueName := queue.ID(data[0]), data[1]
 
 		// submit person and get list
 		sender := ctx.Callback().Sender
 		list, err := c.queueDispatcher.RemoveSenderAndList(
-			queueID,
+			queue.ID(queueID),
 			telegram.SenderID(sender.ID))
 		if errors.Is(err, dispatcher.ErrQueueSenderNotExists) {
 			errorBundle := c.bundle.Errors()
@@ -144,7 +142,7 @@ func (c *controller) handleQueueBtnRemove() tele.HandlerFunc {
 
 		// edit message
 		err = ctx.Edit(c.queueText(queueName, list), &tele.SendOptions{
-			ReplyMarkup:           c.queueMarkup(queueID, queueName, len(list)),
+			ReplyMarkup:           c.queueMarkup(queue.ID(queueID), queueName, len(list)),
 			DisableWebPagePreview: true,
 			ParseMode:             tele.ModeMarkdown,
 		})

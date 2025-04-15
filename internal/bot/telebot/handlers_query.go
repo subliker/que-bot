@@ -10,44 +10,6 @@ import (
 	tele "gopkg.in/telebot.v4"
 )
 
-var (
-	queueBtnNew = tele.Btn{
-		Unique: "new",
-	}
-
-	placedQueueBtnNew = tele.Btn{
-		Unique: "pnew",
-	}
-)
-
-func (c *controller) queueBtnNewMarkup(queueName string) *tele.ReplyMarkup {
-	mk := c.client.NewMarkup()
-	btn := queueBtnNew
-	btn.Text = c.bundle.Query().Btns().New()
-	btn = queueBtnNewData(btn, queueName)
-	mk.Inline(tele.Row{btn})
-	return mk
-}
-
-func (c *controller) placedQueueBtnNewMarkup(queueName string) *tele.ReplyMarkup {
-	mk := c.client.NewMarkup()
-	btn := placedQueueBtnNew
-	btn.Text = c.bundle.Query().Btns().New()
-	btn = placedQueueBtnNewData(btn, queueName)
-	mk.Inline(tele.Row{btn})
-	return mk
-}
-
-func queueBtnNewData(btn tele.Btn, queueName string) tele.Btn {
-	btn.Data = queueName
-	return btn
-}
-
-func placedQueueBtnNewData(btn tele.Btn, queueName string) tele.Btn {
-	btn.Data = queueName
-	return btn
-}
-
 func (c *controller) handleQuery() tele.HandlerFunc {
 	return func(ctx tele.Context) error {
 		ctx.Set("handler_type", "query")
@@ -73,15 +35,18 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		queueMemberCount := 0
 		queueNameWithMembersCount := ""
 		queueSplit := strings.Split(queueName, " ")
+
 		var placedQueueReplyMarkup tele.ResultBase
+		placedQueueText := queryBundle.IncorrectCount()
 		if len(queueSplit) > 0 {
 			var err error
 			queueMemberCount, err = strconv.Atoi(queueSplit[len(queueSplit)-1])
-			if err == nil {
+			if err == nil && queueMemberCount > 0 && queueMemberCount < 101 {
 				// if queue member count is set
 				queueNameWithMembersCount = strings.Join(queueSplit[:len(queueSplit)-1], " ")
+				placedQueueText = queryBundle.PlacedQueue().Text(queueNameWithMembersCount, queueMemberCount)
 				placedQueueReplyMarkup = tele.ResultBase{
-					ReplyMarkup: c.placedQueueBtnNewMarkup(queueName),
+					ReplyMarkup: c.placedQueueBtnNewMarkup(queueNameWithMembersCount, queueMemberCount),
 				}
 			}
 		}
@@ -123,7 +88,7 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 				&tele.ArticleResult{
 					Title:       queryBundle.PlacedQueue().Title(queueNameWithMembersCount, queueMemberCount),
 					Description: queryBundle.PlacedQueue().Description(),
-					Text:        queryBundle.PlacedQueue().Text(queueNameWithMembersCount, queueMemberCount),
+					Text:        placedQueueText,
 					ResultBase:  placedQueueReplyMarkup,
 				},
 			},

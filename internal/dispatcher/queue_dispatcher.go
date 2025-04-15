@@ -15,12 +15,22 @@ type QueueDispatcher interface {
 	//
 	// Returns ErrQueueAlreadyExists if queue with queue id already exists in
 	Add(queueID queue.ID) error
+	// AddPlaced creates new placed queue if it doesn't exist
+	//
+	// Returns ErrQueueAlreadyExists if queue with queue id already exists in
+	AddPlaced(queueID queue.ID, queueMemberCount int) error
 	// SubmitSender submits new sender person with sender id in queue with queue id.
 	//
 	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
 	//
 	// Returns ErrQueueSenderAlreadyExists if sender with sender id already exists in queue
 	SubmitSender(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) error
+	// SubmitPlacedSender submits new sender person with sender id in queue with queue id in memberPlace place.
+	//
+	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
+	//
+	// Returns ErrQueueMemberCountIncorrect if place is not available
+	SubmitPlacedSender(queueID queue.ID, senderID telegram.SenderID, person telegram.Person, memberPlace int) error
 	// RemoveSender removes sender from queue with queue id.
 	//
 	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
@@ -37,6 +47,12 @@ type QueueDispatcher interface {
 	//
 	// Returns ErrQueueSenderAlreadyExists if sender with sender id already exists in queue
 	SubmitSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) (persons []telegram.Person, err error)
+	// SubmitPlacedSenderAndList submits sender person in memberPlace place and returns actual persons list
+	//
+	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
+	//
+	// Returns ErrQueueMemberCountIncorrect if place is not available
+	SubmitPlacedSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person, memberPlace int) (persons []telegram.Person, err error)
 	// RemoveSenderAndList removes sender from queue and returns actual persons list
 	//
 	// Returns ErrQueueNotExists if queue with queue id doesn't exist.
@@ -78,6 +94,20 @@ func (qd *queueDispatcher) Add(queueID queue.ID) error {
 	return nil
 }
 
+func (qd *queueDispatcher) AddPlaced(queueID queue.ID, queueMemberCount int) error {
+	// try if already exists
+	ok := qd.qs.Contains(queueID)
+	if ok {
+		return ErrQueueAlreadyExists
+	}
+
+	// add new placed queue
+	qd.qs.Add(queueID, queue.NewPlaced(queueMemberCount))
+
+	qd.logger.Debugf("placed queue(%s) was added", queueID)
+	return nil
+}
+
 func (qd *queueDispatcher) SubmitSender(queueID queue.ID, senderID telegram.SenderID, person telegram.Person) error {
 	// get queue
 	q, ok := qd.qs.Get(queueID)
@@ -92,6 +122,23 @@ func (qd *queueDispatcher) SubmitSender(queueID queue.ID, senderID telegram.Send
 	}
 
 	qd.logger.Debugf("sender(%s) was submitted in queue(%s) with data: \n%# v", senderID, queueID, pretty.Formatter(person))
+	return nil
+}
+
+func (qd *queueDispatcher) SubmitPlacedSender(queueID queue.ID, senderID telegram.SenderID, person telegram.Person, memberPlace int) error {
+	// get queue
+	q, ok := qd.qs.Get(queueID)
+	if !ok {
+		return ErrQueueNotExists
+	}
+
+	// submit sender
+	ok = q.Place(senderID, person, memberPlace)
+	if !ok {
+		return ErrQueueSenderAlreadyExists
+	}
+
+	qd.logger.Debugf("placed sender(%s) was submitted in queue(%s) with data: \n%# v", senderID, queueID, pretty.Formatter(person))
 	return nil
 }
 
@@ -123,6 +170,23 @@ func (qd *queueDispatcher) SubmitSenderAndList(queueID queue.ID, senderID telegr
 	}
 
 	qd.logger.Debugf("queue(%s) was submitted with sender(%s) with data: \n%# v\n and listed: \n%# v", queueID, senderID, pretty.Formatter(person), pretty.Formatter(lst))
+	return lst, nil
+}
+
+func (qd *queueDispatcher) SubmitPlacedSenderAndList(queueID queue.ID, senderID telegram.SenderID, person telegram.Person, memberPlace int) (persons []telegram.Person, err error) {
+	// get queue
+	q, ok := qd.qs.Get(queueID)
+	if !ok {
+		return nil, ErrQueueNotExists
+	}
+
+	// append and get list with lock
+	lst, ok := q.LockedPlaceAndList(senderID, person, memberPlace)
+	if !ok {
+		return nil, ErrQueueSenderAlreadyExists
+	}
+
+	qd.logger.Debugf("placed queue(%s) was submitted with sender(%s) with data: \n%# v\n and listed: \n%# v", queueID, senderID, pretty.Formatter(person), pretty.Formatter(lst))
 	return lst, nil
 }
 
