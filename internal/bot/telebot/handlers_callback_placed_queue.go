@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/subliker/que-bot/internal/dispatcher"
 	"github.com/subliker/que-bot/internal/dispatcher/queue"
@@ -91,13 +92,24 @@ func (c *controller) handlePlacedQueueBtnSubmit() tele.HandlerFunc {
 		}
 
 		// edit message
-		if err := ctx.Edit(c.bundle.Callback().PlacedQueue().Main(queueName), &tele.SendOptions{
-			ReplyMarkup:           c.placedQueueMarkup(queue.ID(queueID), queueName, list),
-			DisableWebPagePreview: true,
-			ParseMode:             tele.ModeMarkdown,
-		}); err != nil && !strings.Contains(err.Error(), "True") {
-			return fmt.Errorf("error editing message: %w", err)
-		}
+		c.limiter.Do(queueID, func() {
+			if err := ctx.Edit(c.bundle.Callback().PlacedQueue().Main(queueName), &tele.SendOptions{
+				ReplyMarkup:           c.placedQueueMarkup(queue.ID(queueID), queueName, list),
+				DisableWebPagePreview: true,
+				ParseMode:             tele.ModeMarkdown,
+			}); err != nil && !strings.Contains(err.Error(), "True") {
+				if strings.Contains(err.Error(), "retry after") {
+					errorBundle := c.bundle.Errors()
+					ctx.RespondAlert(errorBundle.RetryAfter())
+					return
+				}
+				c.logger.
+					WithFields("handler_type", "callback",
+						"handler", "queue_btn_submit").
+					Errorf("error editing message: %s", err)
+				return
+			}
+		}, time.Millisecond*1500)
 		return nil
 	}
 }

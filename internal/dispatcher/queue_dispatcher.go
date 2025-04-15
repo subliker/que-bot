@@ -183,7 +183,7 @@ func (qd *queueDispatcher) SubmitPlacedSenderAndList(queueID queue.ID, senderID 
 	// append and get list with lock
 	lst, ok := q.LockedPlaceAndList(senderID, person, memberPlace)
 	if !ok {
-		return nil, ErrQueueSenderAlreadyExists
+		return nil, ErrQueueMemberCountIncorrect
 	}
 
 	qd.logger.Debugf("placed queue(%s) was submitted with sender(%s) with data: \n%# v\n and listed: \n%# v", queueID, senderID, pretty.Formatter(person), pretty.Formatter(lst))
