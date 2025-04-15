@@ -119,19 +119,36 @@ func (b *placedQueueBtnRemove) parseData(callbackData string) (queueID, queueNam
 
 func (c *controller) placedQueueMarkup(queueID queue.ID, queueName string, list []telegram.Person) *tele.ReplyMarkup {
 	mk := c.client.NewMarkup()
-	rs := make([]tele.Row, len(list)+2)
+
+	columns := 1
+	if len(list) > 10 {
+		columns = 2
+	}
+
+	rs := make([]tele.Row, 1)
+	r := tele.Row{}
+
+	i := 0
+	placeBtn := func(b tele.Btn) {
+		r = append(r, b)
+		if len(r) == columns || i == len(list)-1 {
+			rs = append(rs, r)
+			r = tele.Row{}
+		}
+	}
 
 	placedCount := 0
-	for i, p := range list {
+	p := telegram.Person{}
+	for i, p = range list {
 		if p.Username != "" {
 			placedCount++
-			rs[i+1] = tele.Row{mk.URL(c.bundle.Callback().PlacedQueue().Member(i+1, p.FirstName, p.LastName), "https://t.me/"+p.Username)}
+			placeBtn(mk.URL(c.bundle.Callback().PlacedQueue().Member(i+1, p.FirstName, p.LastName), "https://t.me/"+p.Username))
 			continue
 		}
 		submitBtn := pqBtnSubmit
 		submitBtn.Text = strconv.Itoa(i+1) + "."
 		submitBtn.setData(string(queueID), queueName, i)
-		rs[i+1] = tele.Row{submitBtn.tele()}
+		placeBtn(submitBtn.tele())
 	}
 
 	submitHeadBtn := pqBtnSubmitHead
@@ -142,7 +159,7 @@ func (c *controller) placedQueueMarkup(queueID queue.ID, queueName string, list 
 	removeBtn := pqBtnRemove
 	removeBtn.Text = c.bundle.Callback().Btns().Remove()
 	removeBtn.setData(string(queueID), queueName)
-	rs[len(rs)-1] = tele.Row{removeBtn.tele()}
+	rs = append(rs, tele.Row{removeBtn.tele()})
 	mk.Inline(rs...)
 	return mk
 }
