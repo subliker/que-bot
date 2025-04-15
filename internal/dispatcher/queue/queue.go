@@ -124,8 +124,8 @@ func (q *Queue) PlaceHead(senderID telegram.SenderID, person telegram.Person) bo
 		if cur.next.senderID == 0 {
 			cur.next.person = person
 			cur.next.senderID = senderID
+			q.ms[senderID] = struct{}{}
 			return true
-
 		}
 		cur = cur.next
 	}
