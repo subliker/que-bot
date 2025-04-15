@@ -41,7 +41,7 @@ func (c *controller) handleQuery() tele.HandlerFunc {
 		if len(queueSplit) > 0 {
 			var err error
 			queueMemberCount, err = strconv.Atoi(queueSplit[len(queueSplit)-1])
-			if err == nil && queueMemberCount > 0 && queueMemberCount < 101 {
+			if err == nil && queueMemberCount > 0 && queueMemberCount < 100 {
 				// if queue member count is set
 				queueNameWithMembersCount = strings.Join(queueSplit[:len(queueSplit)-1], " ")
 				placedQueueText = queryBundle.PlacedQueue().Text(queueNameWithMembersCount, queueMemberCount)

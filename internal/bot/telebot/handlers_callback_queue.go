@@ -132,7 +132,7 @@ func (c *controller) handleQueueBtnRemove() tele.HandlerFunc {
 			return fmt.Errorf("error parsing queue remove btn from callback: %w", err)
 		}
 
-		// submit person and get list
+		// remove person and get list
 		sender := ctx.Callback().Sender
 		list, err := c.queueDispatcher.RemoveSenderAndList(
 			queue.ID(queueID),
@@ -168,7 +168,7 @@ func (c *controller) handleQueueBtnRemove() tele.HandlerFunc {
 				}
 				c.logger.
 					WithFields("handler_type", "callback",
-						"handler", "queue_btn_submit").
+						"handler", "queue_btn_remove").
 					Errorf("error editing message: %s", err)
 				return
 			}

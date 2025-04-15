@@ -73,6 +73,28 @@ func (b *placedQueueBtnSubmit) parseData(callbackData string) (queueID, queueNam
 	return ss[0], ss[1], n, nil
 }
 
+// placedQueueBtnRemove is btn to remove person from places queue
+type placedQueueBtnRemove struct {
+	btn
+}
+
+var pqBtnRemove = placedQueueBtnRemove{
+	btn: newBtn("prm"),
+}
+
+func (b *placedQueueBtnRemove) setData(queueID, queueName string) {
+	b.Data = strings.Join([]string{queueID, queueName}, "|")
+}
+
+func (b *placedQueueBtnRemove) parseData(callbackData string) (queueID, queueName string, err error) {
+	ss := strings.Split(callbackData, "|")
+	if len(ss) != 2 {
+		return "", "", fmt.Errorf("incorrect callback data: %s", callbackData)
+	}
+
+	return ss[0], ss[1], nil
+}
+
 func (c *controller) placedQueueMarkup(queueID queue.ID, queueName string, list []telegram.Person) *tele.ReplyMarkup {
 	mk := c.client.NewMarkup()
 	rs := make([]tele.Row, 0, len(list))
@@ -86,6 +108,10 @@ func (c *controller) placedQueueMarkup(queueID queue.ID, queueName string, list 
 		submitBtn.setData(string(queueID), queueName, i)
 		rs = append(rs, tele.Row{submitBtn.tele()})
 	}
+	removeBtn := pqBtnRemove
+	removeBtn.Text = c.bundle.Callback().Btns().Remove()
+	removeBtn.setData(string(queueID), queueName)
+	rs = append(rs, tele.Row{removeBtn.tele()})
 	mk.Inline(rs...)
 	return mk
 }

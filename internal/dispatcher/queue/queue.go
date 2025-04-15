@@ -131,6 +131,26 @@ func (q *Queue) Delete(senderID telegram.SenderID) bool {
 	return true
 }
 
+func (q *Queue) ClearPlacedSender(senderID telegram.SenderID) bool {
+	// get sender index
+	_, ok := q.ms[senderID]
+	if !ok {
+		return false
+	}
+
+	cur := q.head
+	for cur.next != nil {
+		if cur.next.senderID == senderID {
+			cur.next.senderID = 0
+			cur.next.person = telegram.Person{}
+			delete(q.ms, senderID)
+			return true
+		}
+		cur = cur.next
+	}
+	return false
+}
+
 func (q *Queue) List() []telegram.Person {
 	arr := make([]telegram.Person, 0)
 	cur := q.head
@@ -175,6 +195,20 @@ func (q *Queue) LockedDeleteAndList(senderID telegram.SenderID) ([]telegram.Pers
 
 	// delete
 	ok := q.Delete(senderID)
+	if !ok {
+		return nil, false
+	}
+
+	// get list
+	return q.List(), true
+}
+
+func (q *Queue) LockedClearPlacedSenderAndList(senderID telegram.SenderID) ([]telegram.Person, bool) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	// delete
+	ok := q.ClearPlacedSender(senderID)
 	if !ok {
 		return nil, false
 	}
