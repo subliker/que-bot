@@ -74,3 +74,37 @@ func TestDelete(t *testing.T) {
 		assert.Equal([]telegram.Person{}, q.List())
 	})
 }
+
+func TestPlace(t *testing.T) {
+	t.Run("successfully placed person", func(t *testing.T) {
+		assert := assert.New(t)
+
+		queue := NewPlaced(4)
+
+		tp := telegram.Person{
+			FirstName: "a",
+		}
+		ok := queue.Place(1, tp, 2)
+		assert.True(ok)
+
+		assert.Equal([]telegram.Person{
+			{}, {}, tp, {},
+		}, queue.List())
+	})
+
+	t.Run("not in range", func(t *testing.T) {
+		assert := assert.New(t)
+
+		queue := NewPlaced(4)
+
+		tp := telegram.Person{
+			FirstName: "a",
+		}
+		ok := queue.Place(1, tp, 4)
+		assert.False(ok)
+
+		assert.Equal([]telegram.Person{
+			{}, {}, {}, {},
+		}, queue.List())
+	})
+}
