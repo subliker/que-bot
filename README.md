@@ -27,7 +27,7 @@ You should use `task set-example` to auto create config files with options and c
    - `task build` to build project for your platform in directory `build`
    - `task docker-build -- -t <image-name>` to build with docker
 
-### Examples 🤖
+## Examples 🤖
 1. Query to create queue **Матан**:
 
 <p align="center">
